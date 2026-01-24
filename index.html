@@ -72,8 +72,6 @@
             cursor: pointer;
         }
         .btn-view:hover { background: var(--meta-blue); color: white; }
-
-        .status-wip { color: #fdbb2d; font-size: 0.75rem; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; }
     </style>
 </head>
 <body>
@@ -88,17 +86,11 @@
                 <li><a href="admin.html" class="btn-admin">ADMIN</a></li>
             </ul>
         </nav>
-        <div class="header-right">
-            <div class="social-icons">
-                <a href="#"><i class="fab fa-instagram"></i></a>
-                <a href="#"><i class="fab fa-artstation"></i></a>
-            </div>
-        </div>
     </header>
 
     <section class="hero">
         <h1>CapitanBlue <span style="color:var(--meta-blue)">Models</span></h1>
-        <p style="color: #b0b3b8; font-size: 1.1rem; max-width: 600px;">Visualización 3D de alta fidelidad para modelos de gran escala.</p>
+        <p style="color: #b0b3b8; font-size: 1.1rem; max-width: 600px;">Visualización 3D local optimizada para archivos de gran escala.</p>
     </section>
 
     <section id="mis-modelos">
@@ -111,54 +103,22 @@
                     <img src="img/previa_sapo.jpg" alt="Rana">
                 </div>
                 <div class="card-info">
-                    <h3>Rana Tropical (HQ)</h3>
-                    <p>Modelo de alta carga poligonal optimizado para el visor.</p>
-                    <a onclick="launchVisor('https://github.com/CapitanBlu/CapitanBlueModels/releases/download/fnaf/sapo.glb')" class="btn-view">
+                    <h3>Rana Tropical (Local)</h3>
+                    <p>Cargado directamente desde el repositorio. Sin errores de CORS.</p>
+                    <a onclick="launchVisor('sapo.glb')" class="btn-view">
                         <i class="fas fa-cube"></i> EXPLORAR ASSET
                     </a>
                 </div>
             </div>
 
-            <div class="card">
-                <div class="thumb-container">
-                    <span class="badge">GAMEREADY</span>
-                    <img src="https://via.placeholder.com/400x225/111/fff?text=Casco+V1" alt="Modelo">
-                </div>
-                <div class="card-info">
-                    <h3>Casco Táctico</h3>
-                    <p>Asset con texturas 4K y materiales PBR avanzados.</p>
-                    <a onclick="launchVisor('TU_OTRO_ENLACE_DE_RELEASE')" class="btn-view">
-                        <i class="fas fa-cube"></i> EXPLORAR ASSET
-                    </a>
-                </div>
-            </div>
-
-        </div>
-    </section>
-
-    <section id="en-proceso">
-        <h2 style="font-size: 2rem; margin-bottom: 30px;">Próximos Proyectos</h2>
-        <div class="card" style="max-width: 450px;">
-            <div class="card-info">
-                <span class="status-wip"><i class="fas fa-clock"></i> Modelando - 70%</span>
-                <h3 style="margin-top:10px;">Cyber City Environment</h3>
-                <p>Escenario futurista modular de alto rendimiento.</p>
-            </div>
         </div>
     </section>
 
     <script>
-        /**
-         * Nueva función compatible con enlaces externos pesados (GitHub Releases)
-         */
-        function launchVisor(modelUrl) {
-            if(!modelUrl || modelUrl.includes('TU_OTRO_ENLACE')) {
-                alert("Enlace no configurado. Asegúrate de subir el modelo a GitHub Releases.");
-                return;
-            }
-            
-            // Redirigimos al visor pasando la URL completa codificada
-            window.location.href = `visor.html?model=${encodeURIComponent(modelUrl)}`;
+        function launchVisor(modelPath) {
+            if(!modelPath) return;
+            // Al pasar solo 'sapo.glb', el visor lo buscará en tu propia carpeta de GitHub
+            window.location.href = `visor.html?model=${encodeURIComponent(modelPath)}`;
         }
     </script>
 
