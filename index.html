@@ -83,7 +83,7 @@
                 <li><a href="#mis-modelos">Modelos</a></li>
                 <li><a href="#en-proceso">WIP</a></li>
                 <li><a href="lab.html" class="btn-lab"><i class="fas fa-flask"></i> LAB (Crear)</a></li>
-                <li><a href="admin.html" class="btn-admin">ADMIN</a></li>
+                <li><a href="admin.html">ADMIN</a></li>
             </ul>
         </nav>
     </header>
@@ -122,11 +122,10 @@
         function launchVisor(fileName) {
             if(!fileName) return;
             
-            // Construimos la ruta hacia la carpeta 'models'
-            // Según tus notas, la carpeta es 'models'
+            // Ruta corregida a la carpeta 'modelos'
             const filePath = 'modelos/' + fileName;
             
-            // Redirigimos al visor pasando la ruta completa
+            // Redirigimos al visor pasando la ruta completa codificada
             window.location.href = `visor.html?model=${encodeURIComponent(filePath)}`;
         }
     </script>
