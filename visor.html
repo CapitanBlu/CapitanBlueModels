@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Inspector 3D Pro | CapitanBlue</title>
+    <title>Inspector Pro | CapitanBlue</title>
     
     <script src="https://unpkg.com/three@0.157.0/build/three.min.js"></script>
     <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.3.0/model-viewer.min.js"></script>
@@ -11,102 +11,91 @@
     <style>
         :root {
             --accent: #00d4ff;
-            --panel-bg: rgba(10, 10, 15, 0.9);
-            --glass: rgba(255, 255, 255, 0.05);
-            --grad: radial-gradient(circle at 50% 40%, #1a1a2e 0%, #050508 100%);
+            --bg: #0a0a0f;
+            --panel: rgba(15, 15, 20, 0.95);
         }
 
-        body, html { margin: 0; padding: 0; width: 100%; height: 100%; background: var(--grad); color: white; font-family: 'Inter', sans-serif; overflow: hidden; }
+        body, html { margin: 0; padding: 0; width: 100%; height: 100%; background: var(--bg); color: white; font-family: 'Inter', sans-serif; overflow: hidden; }
 
-        model-viewer { width: 100%; height: 100vh; --poster-color: transparent; }
+        model-viewer { width: 100%; height: 100vh; --poster-color: transparent; background: radial-gradient(circle at 50% 40%, #1a1a2e 0%, #050508 100%); }
 
-        /* HEADER */
-        .header { position: absolute; top: 0; width: 100%; padding: 20px 30px; display: flex; justify-content: space-between; align-items: center; z-index: 100; box-sizing: border-box; pointer-events: none; }
-        .header * { pointer-events: auto; }
-        .back-link { text-decoration: none; color: #888; font-size: 0.8rem; letter-spacing: 1px; transition: 0.3s; }
-        .back-link:hover { color: var(--accent); }
+        /* UI SUPERIOR */
+        .header { position: absolute; top: 0; width: 100%; padding: 25px; display: flex; justify-content: space-between; align-items: center; z-index: 100; pointer-events: none; }
+        .back-link { pointer-events: auto; text-decoration: none; color: #666; font-size: 0.75rem; font-weight: 800; letter-spacing: 1px; transition: 0.3s; border: 1px solid #333; padding: 8px 15px; border-radius: 5px; }
+        .back-link:hover { color: var(--accent); border-color: var(--accent); background: rgba(0,212,255,0.05); }
 
-        /* PANEL LATERAL (Inspector) */
+        /* INSPECTOR LATERAL */
         .inspector {
-            position: absolute; right: 20px; top: 80px; width: 260px;
-            background: var(--panel-bg); border: 1px solid rgba(255,255,255,0.1);
-            border-radius: 15px; padding: 20px; backdrop-filter: blur(20px);
-            z-index: 100; transform: translateX(300px); transition: 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            position: absolute; right: 20px; top: 80px; width: 280px;
+            background: var(--panel); border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 12px; padding: 20px; backdrop-filter: blur(15px);
+            z-index: 100; box-shadow: 0 10px 30px rgba(0,0,0,0.5);
         }
-        .inspector.open { transform: translateX(0); }
 
-        .inspector h4 { margin: 0 0 15px 0; font-size: 0.75rem; color: var(--accent); text-transform: uppercase; letter-spacing: 2px; }
+        .inspector h4 { margin: 0 0 15px 0; font-size: 0.7rem; color: var(--accent); text-transform: uppercase; letter-spacing: 2px; border-bottom: 1px solid #333; padding-bottom: 8px; }
         
-        .control-group { margin-bottom: 20px; }
-        .label-row { display: flex; justify-content: space-between; font-size: 0.7rem; margin-bottom: 8px; color: #ccc; }
+        .control-group { margin-bottom: 18px; }
+        .label-row { display: flex; justify-content: space-between; font-size: 0.7rem; margin-bottom: 8px; color: #888; }
         
-        input[type="range"] { width: 100%; accent-color: var(--accent); cursor: pointer; }
-
-        /* BOTONES DE MODO */
+        /* BOTONES ESTILO SKETCHFAB */
         .mode-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
         .btn-mode { 
-            background: var(--glass); border: 1px solid rgba(255,255,255,0.1); 
-            color: white; padding: 8px; border-radius: 6px; font-size: 0.65rem; 
-            cursor: pointer; transition: 0.3s;
+            background: #1a1a1a; border: 1px solid #333; 
+            color: #888; padding: 10px; border-radius: 6px; font-size: 0.65rem; 
+            cursor: pointer; transition: 0.2s; font-weight: 600;
         }
-        .btn-mode.active { background: var(--accent); color: black; border-color: var(--accent); font-weight: bold; }
+        .btn-mode:hover { border-color: #555; color: white; }
+        .btn-mode.active { background: var(--accent); color: black; border-color: var(--accent); }
 
-        /* STATS CHIP */
+        /* INPUTS */
+        input[type="range"] { width: 100%; accent-color: var(--accent); height: 4px; cursor: pointer; }
+
+        /* STATS */
         .stats-chip {
-            position: absolute; bottom: 30px; left: 30px;
-            background: rgba(0,0,0,0.6); padding: 8px 15px; border-radius: 8px;
-            font-size: 10px; font-family: monospace; color: #00ffaa;
-            border-left: 3px solid #00ffaa;
-        }
-
-        /* TOGGLE INSPECTOR */
-        .toggle-insp {
-            position: absolute; right: 20px; top: 20px;
-            background: var(--accent); color: black; border: none;
-            width: 40px; height: 40px; border-radius: 10px; cursor: pointer; z-index: 110;
+            position: absolute; bottom: 25px; left: 25px;
+            background: rgba(0,0,0,0.8); padding: 10px 18px; border-radius: 6px;
+            font-size: 11px; font-family: 'JetBrains Mono', monospace; color: var(--accent);
+            border: 1px solid rgba(0,212,255,0.2); pointer-events: none;
         }
     </style>
 </head>
 <body>
 
     <div class="header">
-        <a href="index.html" class="back-link">← VOLVER AL REPOSITORIO</a>
-        <h2 id="model-name" style="margin:0; font-size: 1rem; font-weight: 300;">CARGANDO ASSET...</h2>
+        <a href="index.html" class="back-link">← VOLVER AL PORTAFOLIO</a>
+        <h2 id="model-name" style="margin:0; font-size: 0.9rem; font-weight: 800; color: white;">MODELO 3D</h2>
     </div>
 
-    <button class="toggle-insp" onclick="document.querySelector('.inspector').classList.toggle('open')">⚙️</button>
-
-    <div class="inspector open">
-        <h4>Visualización</h4>
+    <div class="inspector">
+        <h4>Renderizado</h4>
         <div class="control-group">
-            <div class="label-row"><span>Modo de Render</span></div>
             <div class="mode-grid">
                 <button class="btn-mode active" id="m-final" onclick="setMode('final')">Final</button>
                 <button class="btn-mode" id="m-wire" onclick="setMode('wire')">Wireframe</button>
                 <button class="btn-mode" id="m-clay" onclick="setMode('clay')">Clay</button>
-                <button class="btn-mode" id="m-uv" onclick="setMode('uv')">UV Check</button>
+                <button class="btn-mode" id="m-uv" onclick="setMode('uv')">Check UV</button>
             </div>
         </div>
 
         <h4>Iluminación</h4>
         <div class="control-group">
-            <div class="label-row"><span>Exposición</span> <span id="val-exp">1.0</span></div>
-            <input type="range" min="0" max="3" step="0.1" value="1" oninput="updateExp(this.value)">
+            <div class="label-row"><span>Intensidad</span> <span id="val-exp">1.0</span></div>
+            <input type="range" min="0" max="2" step="0.1" value="1" oninput="updateExp(this.value)">
         </div>
 
         <div class="control-group">
-            <div class="label-row"><span>Rotación Luz</span></div>
-            <input type="range" min="0" max="360" value="0" oninput="updateLight(this.value)">
-        </div>
-
-        <div id="anim-section" style="display:none">
-            <h4>Animación</h4>
-            <button class="btn-mode" style="width:100%" onclick="toggleAnim()" id="play-pause">PAUSE</button>
+            <div class="label-row"><span>Ambiente (HDR)</span></div>
+            <select id="env-select" class="btn-mode" style="width:100%" onchange="updateEnv(this.value)">
+                <option value="neutral">Estudio Neutro</option>
+                <option value="https://modelviewer.dev/shared-assets/environments/spruit_sunrise_1k_hdr.hdr">Amanecer</option>
+                <option value="https://modelviewer.dev/shared-assets/environments/aircraft_workshop_01_1k.hdr">Taller</option>
+                <option value="https://modelviewer.dev/shared-assets/environments/moonlight_1k.hdr">Noche / Luna</option>
+            </select>
         </div>
     </div>
 
     <div class="stats-chip" id="stats">
-        POLYS: -- | VERTS: --
+        POLYS: CALC... | VERTS: CALC...
     </div>
 
     <model-viewer id="main-visor" 
@@ -116,7 +105,7 @@
         shadow-intensity="1" 
         environment-image="neutral"
         exposure="1"
-        interpolation-decay="200"
+        camera-orbit="45deg 75deg 105%"
         interaction-prompt="none">
     </model-viewer>
 
@@ -124,76 +113,62 @@
         const viewer = document.querySelector("#main-visor");
         const statsDisplay = document.querySelector("#stats");
         let wireframes = [];
-        let originalMaterials = new Map();
+        let backupMaterials = [];
 
-        // Cargar Modelo
         const params = new URLSearchParams(window.location.search);
         const model = params.get('model');
         if(model) {
             viewer.src = `modelos/${model}`;
-            document.querySelector("#model-name").innerText = model.toUpperCase();
+            document.querySelector("#model-name").innerText = model.split('.')[0].toUpperCase();
         }
 
+        // --- LÓGICA DE DETECCIÓN Y REPARACIÓN ---
         viewer.addEventListener('load', () => {
-            calculateStats();
-            setupWireframe();
+            const scene = viewer.toObject3D(); // Forma oficial de obtener la escena
             
-            // Check Animaciones
-            if (viewer.availableAnimations.length > 0) {
-                document.getElementById('anim-section').style.display = 'block';
-                viewer.play();
-            }
-        });
-
-        function calculateStats() {
             let polys = 0;
             let verts = 0;
-            const scene = viewer.model[Object.getOwnPropertySymbols(viewer.model)[0]];
-            
+            wireframes = [];
+            backupMaterials = [];
+
             scene.traverse(node => {
                 if (node.isMesh) {
+                    // 1. Calcular Stats
                     polys += node.geometry.index ? node.geometry.index.count / 3 : node.geometry.attributes.position.count / 3;
                     verts += node.geometry.attributes.position.count;
-                }
-            });
-            statsDisplay.innerText = `POLYS: ${Math.round(polys).toLocaleString()} | VERTS: ${Math.round(verts).toLocaleString()}`;
-        }
 
-        function setupWireframe() {
-            const scene = viewer.model[Object.getOwnPropertySymbols(viewer.model)[0]];
-            wireframes = [];
-            scene.traverse(node => {
-                if (node.isMesh) {
+                    // 2. Crear Wireframe Real
                     const geo = new THREE.WireframeGeometry(node.geometry);
-                    const mat = new THREE.LineBasicMaterial({ color: 0x00d4ff, transparent: true, opacity: 0.5 });
+                    const mat = new THREE.LineBasicMaterial({ color: 0x00d4ff, transparent: true, opacity: 0.6 });
                     const wire = new THREE.LineSegments(geo, mat);
                     node.add(wire);
                     wire.visible = false;
                     wireframes.push(wire);
+
+                    // 3. Backup de materiales para modo Clay/UV
+                    backupMaterials.push({
+                        mesh: node,
+                        original: node.material.clone()
+                    });
                 }
             });
-        }
+
+            statsDisplay.innerText = `POLYS: ${Math.round(polys).toLocaleString()} | VERTS: ${Math.round(verts).toLocaleString()}`;
+        });
 
         function setMode(mode) {
-            // Reset botones
             document.querySelectorAll('.btn-mode').forEach(b => b.classList.remove('active'));
-            document.getElementById(`m-${mode === 'final' ? 'final' : mode === 'wire' ? 'wire' : mode === 'clay' ? 'clay' : 'uv'}`).classList.add('active');
+            document.getElementById(`m-${mode}`).classList.add('active');
 
-            const materials = viewer.model.materials;
-            
             wireframes.forEach(w => w.visible = (mode === 'wire'));
 
-            materials.forEach((mat, idx) => {
-                if (!originalMaterials.has(idx)) originalMaterials.set(idx, mat.pbrMetallicRoughness.baseColorFactor);
-                
+            backupMaterials.forEach(entry => {
                 if (mode === 'clay') {
-                    mat.pbrMetallicRoughness.setBaseColorFactor([0.7, 0.7, 0.7, 1]);
-                    mat.setMetallicFactor(0);
+                    entry.mesh.material = new THREE.MeshStandardMaterial({ color: 0x777777, roughness: 0.4 });
                 } else if (mode === 'uv') {
-                    mat.pbrMetallicRoughness.setBaseColorFactor([0, 1, 1, 1]);
+                    entry.mesh.material = new THREE.MeshStandardMaterial({ color: 0x00ffaa, wireframe: true });
                 } else {
-                    mat.pbrMetallicRoughness.setBaseColorFactor(originalMaterials.get(idx));
-                    mat.setMetallicFactor(1);
+                    entry.mesh.material = entry.original;
                 }
             });
         }
@@ -203,19 +178,8 @@
             document.getElementById('val-exp').innerText = val;
         }
 
-        function updateLight(val) {
-            viewer.setAttribute('rotation', `0deg 0deg ${val}deg`);
-        }
-
-        function toggleAnim() {
-            const btn = document.getElementById('play-pause');
-            if (btn.innerText === "PAUSE") {
-                viewer.pause();
-                btn.innerText = "PLAY";
-            } else {
-                viewer.play();
-                btn.innerText = "PAUSE";
-            }
+        function updateEnv(val) {
+            viewer.environmentImage = val;
         }
     </script>
 </body>
