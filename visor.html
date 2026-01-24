@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <title>Visor 3D Interactivo - CapitanBlue</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.3.0/model-viewer.min.js"></script>
+    <style>
+        body { margin: 0; background: #111; color: white; font-family: sans-serif; }
+        model-viewer {
+            width: 100vw;
+            height: 90vh;
+            background-color: #1a1a1a;
+        }
+        .controls {
+            padding: 10px;
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            background: #222;
+        }
+        button {
+            padding: 8px 15px;
+            cursor: pointer;
+            background: #1a2a6c;
+            color: white;
+            border: none;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+
+    <model-viewer 
+        id="modelo3D"
+        src="tu-modelo.glb" 
+        ar 
+        camera-controls 
+        shadow-intensity="1" 
+        exposure="1"
+        environment-image="neutral"
+        auto-rotate>
+        
+        <div class="controls">
+            <button onclick="toggleWireframe()">Ver Wireframe</button>
+            <button onclick="toggleTexture()">Alternar Texturas</button>
+            <button onclick="resetCamera()">Reset Cam</button>
+        </div>
+    </model-viewer>
+
+    <script>
+        const modelViewer = document.querySelector('#modelo3D');
+
+        // Función básica para resetear vista
+        function resetCamera() {
+            modelViewer.cameraOrbit = "0deg 75deg 105%";
+        }
+
+        // Para wireframe y texturas avanzadas se requiere manipular los materiales 
+        // de Three.js que corren por debajo.
+        function toggleWireframe() {
+            const material = modelViewer.model.materials[0];
+            // Esto es una simplificación, requiere lógica de shaders para wireframe puro
+            alert("Cargando modo estructura..."); 
+        }
+    </script>
+</body>
+</html>
