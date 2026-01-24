@@ -3,58 +3,68 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Visualizador Interactivo | CapitanBlue</title>
+    <title>Visualizador Pro | CapitanBlue</title>
+    
+    <script src="https://unpkg.com/three@0.157.0/build/three.min.js"></script>
     <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.3.0/model-viewer.min.js"></script>
+
     <style>
         :root {
-            --accent: #0064e0;
-            --glass: rgba(15, 15, 15, 0.85);
+            --accent: #00d4ff; /* Color cián para destacar */
+            --glass-bg: rgba(20, 20, 35, 0.85);
+            --studio-gradient: radial-gradient(circle at 50% 30%, #2a2a4a 0%, #0a0a12 100%);
         }
 
-        body, html { margin: 0; padding: 0; width: 100%; height: 100%; background: #050505; color: white; font-family: 'Inter', sans-serif; overflow: hidden; }
+        body, html { 
+            margin: 0; padding: 0; width: 100%; height: 100%; 
+            background: var(--studio-gradient); /* Nuevo fondo con vida */
+            color: white; font-family: 'Inter', sans-serif; overflow: hidden; 
+        }
 
         model-viewer {
             width: 100%;
             height: 100vh;
-            background: radial-gradient(circle at center, #111 0%, #050505 100%);
             --poster-color: transparent;
         }
 
-        /* Interfaz Superior */
-        .top-ui {
-            position: absolute; top: 25px; left: 25px; z-index: 100;
-        }
+        /* UI Superior */
+        .top-ui { position: absolute; top: 25px; left: 25px; z-index: 100; display: flex; align-items: center; gap: 20px; }
         .back-btn {
-            text-decoration: none; color: white; background: var(--glass);
+            text-decoration: none; color: white; background: var(--glass-bg);
             padding: 12px 20px; border-radius: 12px; backdrop-filter: blur(10px);
             border: 1px solid rgba(255,255,255,0.1); font-size: 0.9rem; transition: 0.3s;
-            display: inline-flex; align-items: center; gap: 8px;
+            display: flex; align-items: center; gap: 8px; font-weight: 600;
         }
-        .back-btn:hover { background: var(--accent); border-color: var(--accent); }
+        .back-btn:hover { background: var(--accent); color: black; border-color: var(--accent); }
+        #model-name { font-size: 1.2rem; font-weight: 800; letter-spacing: 1px; text-transform: uppercase; color: var(--accent); text-shadow: 0 0 10px rgba(0, 212, 255, 0.3); }
 
-        /* Panel de Controles Inferior */
+        /* Panel de Controles */
         .bottom-controls {
             position: absolute; bottom: 40px; left: 50%; transform: translateX(-50%);
-            background: var(--glass); padding: 10px 25px; border-radius: 100px;
-            display: flex; gap: 20px; backdrop-filter: blur(20px);
-            border: 1px solid rgba(255,255,255,0.1); box-shadow: 0 20px 40px rgba(0,0,0,0.6);
+            background: var(--glass-bg); padding: 10px 20px; border-radius: 100px;
+            display: flex; gap: 15px; backdrop-filter: blur(20px);
+            border: 1px solid rgba(255,255,255,0.1); box-shadow: 0 20px 40px rgba(0,0,0,0.4);
             z-index: 100;
         }
 
         .control-btn {
-            background: transparent; border: none; color: #aaa;
+            background: transparent; border: none; color: #ccc;
             display: flex; flex-direction: column; align-items: center;
-            cursor: pointer; transition: 0.3s; padding: 8px; min-width: 65px;
+            cursor: pointer; transition: 0.3s; padding: 10px; min-width: 60px;
+            border-radius: 8px;
         }
 
-        .control-btn:hover, .control-btn.active { color: white; }
-        .control-btn svg { width: 22px; height: 22px; margin-bottom: 5px; }
-        .control-btn span { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
+        .control-btn:hover { color: white; background: rgba(255,255,255,0.1); }
+        .control-btn.active { color: var(--accent); }
+        .control-btn svg { width: 24px; height: 24px; margin-bottom: 6px; }
+        .control-btn span { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
 
-        /* Indicador de carga */
+        /* Botón de animación oculto por defecto */
+        #anim-btn { display: none; }
+
+        /* Barra de carga */
         .progress-bar { display: block; width: 33%; height: 4px; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: rgba(255,255,255,0.1); border-radius: 10px; overflow: hidden; }
         .update-bar { background: var(--accent); width: 0%; height: 100%; transition: width 0.3s; }
-        #model-viewer:not(.finished-loading) .progress-bar { display: block; }
         model-viewer.finished-loading .progress-bar { display: none; }
     </style>
 </head>
@@ -62,42 +72,44 @@
 
     <div class="top-ui">
         <a href="index.html" class="back-btn">
-            <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M19 12H5M12 19l-7-7 7-7"></path></svg>
-            VOLVER AL PORTAFOLIO
+            <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M15 19l-7-7 7-7"></path></svg>
+            PORTAFOLIO
         </a>
-        <h2 id="model-name" style="margin-top: 20px; font-size: 1.4rem; letter-spacing: 1px; text-transform: uppercase; font-weight: 800; color: var(--accent);"></h2>
+        <h2 id="model-name">Cargando...</h2>
     </div>
 
     <model-viewer id="main-visor" 
         src="" 
         camera-controls 
         auto-rotate 
-        shadow-intensity="2" 
-        exposure="1" 
+        shadow-intensity="1.5" 
+        shadow-softness="1"
+        exposure="1.2"
         environment-image="neutral"
-        ar-modes="webxr"
+        tone-mapping="aces-filmic"
         loading="eager">
         
         <div class="progress-bar" slot="progress-bar"><div class="update-bar"></div></div>
 
         <div class="bottom-controls">
-            <button class="control-btn" onclick="toggleAutoRotate(this)">
-                <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M23 4v6h-6M20.49 15a9 9 0 11-2.12-9.36L23 10"></path></svg>
+            <button class="control-btn active" id="rotate-btn" onclick="toggleAutoRotate()">
+                <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
                 <span>Girar</span>
             </button>
 
             <button class="control-btn" id="wireframe-btn" onclick="toggleWireframe()">
-                <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"></path></svg>
+                <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path></svg>
                 <span>Malla</span>
             </button>
 
-            <button class="control-btn" onclick="toggleTextures()">
-                <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"></path></svg>
-                <span>Textura</span>
+            <button class="control-btn" id="anim-btn" onclick="toggleAnimation()">
+                <svg id="play-icon" fill="currentColor" viewBox="0 0 24 24" style="display:block"><path d="M8 5v14l11-7z"/></svg>
+                <svg id="pause-icon" fill="currentColor" viewBox="0 0 24 24" style="display:none"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
+                <span>Animación</span>
             </button>
 
             <button class="control-btn" onclick="resetView()">
-                <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"></path></svg>
+                <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 12a9 9 0 109-9 9.75 9.75 0 00-6.74 2.74L3 8"></path><path d="M3 3v5h5"></path></svg>
                 <span>Reset</span>
             </button>
         </div>
@@ -106,70 +118,93 @@
     <script>
         const viewer = document.querySelector("#main-visor");
         const titleDisplay = document.querySelector("#model-name");
+        const animBtn = document.querySelector("#anim-btn");
+        const rotateBtn = document.querySelector("#rotate-btn");
+        let wireframeMode = false;
+        let isPlaying = false;
 
-        // Cargar modelo dinámicamente
+        // 1. CARGA DEL MODELO
         const params = new URLSearchParams(window.location.search);
         const modelFile = params.get('model');
-        
         if(modelFile) {
             viewer.src = `modelos/${modelFile}`;
-            titleDisplay.innerText = modelFile.replace('.glb', '').replace('_', ' ');
+            titleDisplay.innerText = modelFile.replace('.glb', '').replace(/[_-]/g, ' ');
         }
 
-        // Control de Rotación
-        function toggleAutoRotate(btn) {
+        // 2. DETECTAR ANIMACIONES AL CARGAR
+        viewer.addEventListener('load', () => {
+            // Comprobar si existen animaciones
+            if (viewer.availableAnimations && viewer.availableAnimations.length > 0) {
+                animBtn.style.display = 'flex'; // Mostrar el botón
+                viewer.animationName = viewer.availableAnimations[0]; // Preparar la primera
+            }
+            // Preparar el wireframe real
+            setupRealWireframe();
+        });
+
+        // 3. FUNCIONES DE CONTROL
+
+        function toggleAutoRotate() {
             viewer.autoRotate = !viewer.autoRotate;
-            btn.classList.toggle('active');
+            rotateBtn.classList.toggle('active');
         }
 
-        // Reset de Cámara
+        function toggleAnimation() {
+            isPlaying = !isPlaying;
+            animBtn.classList.toggle('active');
+            const playIcon = animBtn.querySelector("#play-icon");
+            const pauseIcon = animBtn.querySelector("#pause-icon");
+
+            if (isPlaying) {
+                viewer.play();
+                playIcon.style.display = 'none';
+                pauseIcon.style.display = 'block';
+            } else {
+                viewer.pause();
+                playIcon.style.display = 'block';
+                pauseIcon.style.display = 'none';
+            }
+        }
+
         function resetView() {
             viewer.cameraOrbit = "0deg 75deg 105%";
             viewer.fieldOfView = "auto";
         }
 
-        // --- FUNCIONES AVANZADAS DE MATERIALES ---
+        // 4. LÓGICA AVANZADA DE WIREFRAME (Three.js)
+        let wireframeObjects = [];
 
-        let texturesOn = true;
-        let wireframeOn = false;
+        function setupRealWireframe() {
+            // Accedemos a la escena interna de Three.js del visor
+            const scene = viewer.model[Object.getOwnPropertySymbols(viewer.model)[0]];
+            wireframeObjects = [];
 
-        async function toggleTextures() {
-            texturesOn = !texturesOn;
-            const materials = viewer.model.materials;
-            
-            materials.forEach(mat => {
-                if (!texturesOn) {
-                    // Guardamos el color original y ponemos un gris neutral
-                    mat.pbrMetallicRoughness.setBaseColorFactor([0.5, 0.5, 0.5, 1]);
-                } else {
-                    // Restauramos (Nota: esto es una simplificación, lo ideal es recargar el material)
-                    mat.pbrMetallicRoughness.setBaseColorFactor([1, 1, 1, 1]);
+            scene.traverse((node) => {
+                if (node.isMesh) {
+                    // Creamos la geometría de líneas basada en la malla original
+                    const wireframeGeometry = new THREE.WireframeGeometry(node.geometry);
+                    // Material cián brillante para las líneas
+                    const wireframeMaterial = new THREE.LineBasicMaterial({ color: 0x00d4ff, linewidth: 1 });
+                    const wireframe = new THREE.LineSegments(wireframeGeometry, wireframeMaterial);
+                    
+                    node.add(wireframe); // Añadimos el wireframe como hijo del objeto
+                    wireframe.visible = false; // Oculto por defecto
+                    wireframeObjects.push(wireframe);
                 }
             });
         }
 
         function toggleWireframe() {
-            wireframeOn = !wireframeOn;
-            const btn = document.querySelector("#wireframe-btn");
-            btn.classList.toggle('active');
-            
-            // Simulación de wireframe mediante shader de model-viewer
-            // Nota técnica: model-viewer no soporta wireframe nativo por comando simple
-            // pero podemos aplicar un efecto de "x-ray" o avisar al usuario.
-            if(wireframeOn) {
-                viewer.style.filter = "invert(1) grayscale(1) brightness(1.5)";
-            } else {
-                viewer.style.filter = "none";
-            }
+            wireframeMode = !wireframeMode;
+            document.querySelector("#wireframe-btn").classList.toggle('active');
+            // Alternar visibilidad de todas las mallas de líneas creadas
+            wireframeObjects.forEach(w => w.visible = wireframeMode);
         }
 
-        // Barra de progreso de carga
-        viewer.addEventListener('progress', (event) => {
-            const bar = document.querySelector('.update-bar');
-            bar.style.width = `${event.detail.totalProgress * 100}%`;
-            if (event.detail.totalProgress === 1) {
-                viewer.classList.add('finished-loading');
-            }
+        // Barra de progreso
+        viewer.addEventListener('progress', (e) => {
+            document.querySelector('.update-bar').style.width = `${e.detail.totalProgress * 100}%`;
+            if (e.detail.totalProgress === 1) viewer.classList.add('finished-loading');
         });
     </script>
 </body>
