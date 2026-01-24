@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Capitan-Lab Ultimate | Professional Suite</title>
+    <title>Capitan-Lab | Aether Engine</title>
     <script async src="https://unpkg.com/es-module-shims@1.8.0/dist/es-module-shims.js"></script>
     <script type="importmap">
     {
@@ -14,85 +14,97 @@
     </script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
-        :root { --b-dark: #1d1d1d; --b-panel: #303030; --b-header: #424242; --b-accent: #e58d2a; --border: #111; }
-        body, html { margin: 0; padding: 0; height: 100%; background: #111; color: #bdbdbd; font-family: 'Inter', sans-serif; font-size: 11px; overflow: hidden; }
+        :root { --b-dark: #121212; --b-panel: #282828; --b-header: #3d3d3d; --b-accent: #e58d2a; }
+        body, html { margin: 0; padding: 0; height: 100%; background: #111; color: #eee; font-family: 'Segoe UI', sans-serif; overflow: hidden; }
         
-        .blender-layout { display: grid; grid-template-columns: 240px 1fr 280px; grid-template-rows: 28px 1fr 24px; height: 100vh; }
-        header, footer { grid-column: 1 / 4; background: var(--b-header); border: 1px solid var(--border); display: flex; align-items: center; padding: 0 10px; z-index: 100; }
+        /* APP LAYOUT */
+        .app-container { display: grid; grid-template-columns: 70px 1fr 280px; grid-template-rows: 40px 1fr 30px; height: 100vh; }
         
-        /* TABS SUPERIORES (Layouts) */
-        .layout-tabs { display: flex; gap: 2px; margin-left: 20px; }
-        .tab { padding: 4px 12px; background: #333; cursor: pointer; border-radius: 4px 4px 0 0; border: 1px solid var(--border); border-bottom: none; }
-        .tab.active { background: var(--b-panel); color: var(--b-accent); font-weight: bold; }
+        header { grid-column: 1 / 4; background: var(--b-header); display: flex; align-items: center; padding: 0 15px; border-bottom: 2px solid #111; justify-content: space-between; }
+        
+        /* TOOLBAR IZQUIERDO (Estilo Android/Blender) */
+        .toolbar { background: var(--b-panel); display: flex; flex-direction: column; align-items: center; py: 10px; border-right: 1px solid #111; gap: 15px; padding-top: 15px;}
+        .tool-icon { width: 45px; height: 45px; display: flex; align-items: center; justify-content: center; border-radius: 8px; cursor: pointer; color: #888; transition: 0.2s; font-size: 1.2rem; }
+        .tool-icon:hover { background: #444; color: white; }
+        .tool-icon.active { background: var(--b-accent); color: black; }
 
-        .sidebar { background: var(--b-panel); border: 1px solid var(--border); overflow-y: auto; padding: 10px; }
-        .p-head { background: #4d4d4d; padding: 6px; color: #fff; font-weight: bold; margin: -10px -10px 10px -10px; border-bottom: 1px solid #111; font-size: 10px; text-transform: uppercase; }
-        
-        .b-btn { background: #555; border: 1px solid #333; color: #eee; padding: 6px; cursor: pointer; width: 100%; margin-bottom: 4px; text-align: left; font-size: 10px; border-radius: 2px; }
-        .b-btn:hover { background: #666; }
-        .b-btn.active { background: var(--b-accent); color: #000; }
+        /* VIEWPORT */
+        #viewport { position: relative; background: radial-gradient(circle, #333 0%, #1a1a1a 100%); }
+        .mode-badge { position: absolute; top: 15px; left: 15px; background: rgba(0,0,0,0.7); padding: 5px 15px; border-radius: 20px; font-size: 12px; border: 1px solid var(--b-accent); color: var(--b-accent); text-transform: uppercase; font-weight: bold; }
 
-        #viewport { background: #393939; position: relative; }
-        .brush-cursor { position: absolute; border: 1px solid white; border-radius: 50%; pointer-events: none; display: none; transform: translate(-50%, -50%); }
+        /* PANEL DERECHO PROPS */
+        .sidebar { background: var(--b-panel); border-left: 1px solid #111; padding: 15px; overflow-y: auto; }
+        .p-section { margin-bottom: 20px; border-bottom: 1px solid #444; padding-bottom: 15px; }
+        .p-title { font-size: 10px; color: var(--b-accent); text-transform: uppercase; margin-bottom: 10px; font-weight: bold; letter-spacing: 1px; }
+        
+        .b-input { background: #1a1a1a; border: 1px solid #000; color: #fff; width: 100%; padding: 5px; border-radius: 4px; font-size: 11px; margin-top: 5px; }
+        .b-btn { background: #444; border: 1px solid #555; color: white; width: 100%; padding: 8px; border-radius: 4px; cursor: pointer; margin-bottom: 5px; font-size: 11px; }
+        .b-btn:active { transform: scale(0.98); }
+        .btn-export { background: var(--b-accent); color: black; font-weight: bold; border: none; margin-top: 10px; }
+
+        footer { grid-column: 1 / 4; background: #222; border-top: 1px solid #000; display: flex; align-items: center; px: 15px; font-size: 10px; color: #666; padding: 0 10px; }
     </style>
 </head>
 <body>
 
-<div class="blender-layout">
+<div class="app-container">
     <header>
-        <span style="font-weight:900; color:var(--b-accent);">CAPITAN-LAB</span>
-        <div class="layout-tabs">
-            <div class="tab active" onclick="setContext('layout')">Layout</div>
-            <div class="tab" onclick="setContext('sculpt')">Sculpting</div>
-            <div class="tab" onclick="setContext('paint')">Texture Paint</div>
-            <div class="tab" onclick="setContext('rig')">Rigging</div>
+        <div style="font-weight: 900; letter-spacing: 1px;">CAPITAN <span style="color:var(--b-accent)">LAB</span> PRO</div>
+        <div style="display:flex; gap:10px;">
+            <button class="b-btn" style="width: auto; padding: 5px 15px;" onclick="undo()">Deshacer</button>
+            <button class="b-btn btn-export" style="margin:0; padding: 5px 15px;" onclick="exportOBJ()">EXPORT .OBJ</button>
         </div>
     </header>
 
-    <div class="sidebar" id="tool-panel">
-        <div id="tools-layout">
-            <div class="p-head">Add Geometry</div>
-            <button class="b-btn" onclick="addObj('cube')">Cube</button>
-            <button class="b-btn" onclick="addObj('sphere')">Sphere</button>
-        </div>
-
-        <div id="tools-sculpt" style="display:none;">
-            <div class="p-head">Brushes</div>
-            <button class="b-btn active">Draw</button>
-            <button class="b-btn">Inflate</button>
-            <button class="b-btn">Smooth</button>
-            <div class="p-head" style="margin-top:10px;">Settings</div>
-            <label>Radius</label><input type="range" style="width:100%">
-        </div>
-
-        <div id="tools-paint" style="display:none;">
-            <div class="p-head">Colors</div>
-            <input type="color" id="paint-color" style="width:100%; height:40px;">
-            <button class="b-btn" style="margin-top:10px;">Flood Fill</button>
-        </div>
-
-        <div id="tools-rig" style="display:none;">
-            <div class="p-head">Skeleton</div>
-            <button class="b-btn" onclick="addBone()">Add Bone (Shift+A)</button>
-            <button class="b-btn">Generate Rig</button>
-        </div>
+    <div class="toolbar">
+        <div class="tool-icon active" title="Layout" onclick="setMode('layout', this)"><i class="fas fa-mouse-pointer"></i></div>
+        <div class="tool-icon" title="Sculpt" onclick="setMode('sculpt', this)"><i class="fas fa-paint-brush"></i></div>
+        <div class="tool-icon" title="Paint" onclick="setMode('paint', this)"><i class="fas fa-fill-drip"></i></div>
+        <div class="tool-icon" title="Rigging" onclick="setMode('rig', this)"><i class="fas fa-bone"></i></div>
+        <div class="tool-icon" title="Add" onclick="toggleAddMenu()"><i class="fas fa-plus-circle"></i></div>
     </div>
 
     <div id="viewport">
-        <div id="brush" class="brush-cursor"></div>
+        <div class="mode-badge" id="mode-label">Object Mode</div>
     </div>
 
     <div class="sidebar">
-        <div class="p-head">Scene Collection</div>
-        <div id="outliner" style="background:#222; height:150px; margin-bottom:10px; padding:5px;"></div>
-        
-        <div class="p-head">Exporter</div>
-        <button class="b-btn" style="background:var(--b-accent); color:000;" onclick="exportOBJ()">Export .OBJ</button>
-        <button class="b-btn" style="background:#444;" onclick="alert('FBX via GLTFExporter...')">Export .FBX (Beta)</button>
+        <div class="p-section">
+            <div class="p-title">Transformación</div>
+            <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:5px;">
+                <button class="b-btn" onclick="gizmo('translate')">G</button>
+                <button class="b-btn" onclick="gizmo('rotate')">R</button>
+                <button class="b-btn" onclick="gizmo('scale')">S</button>
+            </div>
+        </div>
+
+        <div id="prop-sculpt" style="display:none;">
+            <div class="p-title">Sculpt Settings</div>
+            <label>Radio del Pincel</label>
+            <input type="range" class="b-input" min="0.1" max="2" step="0.1" value="0.5">
+            <label>Intensidad</label>
+            <input type="range" class="b-input" min="0.01" max="0.5" step="0.01" value="0.1">
+        </div>
+
+        <div id="prop-material">
+            <div class="p-title">Material PBR</div>
+            <label>Color Base</label>
+            <input type="color" class="b-input" id="baseColor" value="#888888" onchange="updateMaterial()">
+            <label>Rugosidad</label>
+            <input type="range" class="b-input" id="roughness" min="0" max="1" step="0.01" oninput="updateMaterial()">
+            <label>Metálico</label>
+            <input type="range" class="b-input" id="metallic" min="0" max="1" step="0.01" oninput="updateMaterial()">
+        </div>
+
+        <div class="p-section">
+            <div class="p-title">Scene Outliner</div>
+            <div id="outliner" style="max-height: 150px; overflow-y: auto; background: #1a1a1a; padding: 5px; border-radius: 4px;">
+                </div>
+        </div>
     </div>
 
     <footer>
-        <span>Editor Mode: <span id="current-mode">LAYOUT</span> | Capitan Engine 2026</span>
+        <i class="fas fa-cube"></i>&nbsp; Mesh: Cubo.001 | Vértices: <span id="v-count">0</span> | CapitanBlue 2026
     </footer>
 </div>
 
@@ -102,64 +114,113 @@
     import { TransformControls } from 'three/addons/controls/TransformControls.js';
     import { OBJExporter } from 'three/addons/exporters/OBJExporter.js';
 
-    let scene, camera, renderer, orbit, transform;
-    const container = document.getElementById('viewport');
+    let scene, camera, renderer, orbit, transform, currentMesh;
+    const viewport = document.getElementById('viewport');
 
     init();
     animate();
 
     function init() {
         scene = new THREE.Scene();
-        scene.background = new THREE.Color(0x393939);
-        camera = new THREE.PerspectiveCamera(50, container.clientWidth / container.clientHeight, 0.1, 1000);
-        camera.position.set(10, 10, 10);
+        scene.background = new THREE.Color(0x222222);
+
+        camera = new THREE.PerspectiveCamera(45, viewport.clientWidth / viewport.clientHeight, 0.1, 1000);
+        camera.position.set(5, 5, 5);
 
         renderer = new THREE.WebGLRenderer({ antialias: true });
-        renderer.setSize(container.clientWidth, container.clientHeight);
-        container.appendChild(renderer.domElement);
+        renderer.setSize(viewport.clientWidth, viewport.clientHeight);
+        viewport.appendChild(renderer.domElement);
 
-        scene.add(new THREE.GridHelper(20, 20, 0x222222, 0x444444));
-        scene.add(new THREE.AmbientLight(0xffffff, 0.5));
-        
+        // Grid de Blender
+        const grid = new THREE.GridHelper(20, 20, 0x444444, 0x222222);
+        scene.add(grid);
+
+        // Luces
+        const ambient = new THREE.AmbientLight(0xffffff, 0.5);
+        scene.add(ambient);
+        const sun = new THREE.DirectionalLight(0xffffff, 1);
+        sun.position.set(5, 10, 7);
+        scene.add(sun);
+
+        // Controls
         orbit = new OrbitControls(camera, renderer.domElement);
         transform = new TransformControls(camera, renderer.domElement);
         scene.add(transform);
+        transform.addEventListener('dragging-changed', (e) => orbit.enabled = !e.value);
 
-        // Cambiar contextos (Tabs)
-        window.setContext = function(mode) {
-            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-            event.target.classList.add('active');
-            
-            // Ocultar todos los paneles
-            ['layout', 'sculpt', 'paint', 'rig'].forEach(m => {
-                document.getElementById('tools-' + m).style.display = 'none';
-            });
-            // Mostrar seleccionado
-            document.getElementById('tools-' + mode).style.display = 'block';
-            document.getElementById('current-mode').innerText = mode.toUpperCase();
-        };
+        // Añadir Cubo Inicial
+        addPrimitive('cube');
+    }
 
-        window.addObj = function(type) {
-            let geo = type === 'cube' ? new THREE.BoxGeometry(2,2,2) : new THREE.SphereGeometry(2, 32, 32);
-            let mesh = new THREE.Mesh(geo, new THREE.MeshStandardMaterial({color: 0x888888}));
-            scene.add(mesh);
-            transform.attach(mesh);
-        };
+    // --- FUNCIONES DEL MOTOR ---
 
-        window.exportOBJ = function() {
-            const exporter = new OBJExporter();
-            const data = exporter.parse(scene);
-            const link = document.createElement('a');
-            link.href = URL.createObjectURL(new Blob([data], {type: 'text/plain'}));
-            link.download = 'model_capitan.obj';
-            link.click();
-        };
+    window.addPrimitive = function(type) {
+        let geo;
+        if(type === 'cube') geo = new THREE.BoxGeometry(1.5, 1.5, 1.5, 10, 10, 10);
+        else geo = new THREE.SphereGeometry(1, 32, 32);
+
+        const mat = new THREE.MeshStandardMaterial({ color: 0x888888, roughness: 0.5 });
+        const mesh = new THREE.Mesh(geo, mat);
+        scene.add(mesh);
+        transform.attach(mesh);
+        currentMesh = mesh;
+        updateUI();
+    };
+
+    window.setMode = function(mode, el) {
+        document.querySelectorAll('.tool-icon').forEach(i => i.classList.remove('active'));
+        el.classList.add('active');
+        document.getElementById('mode-label').innerText = mode + " MODE";
+        
+        // Mostrar/Ocultar paneles específicos
+        document.getElementById('prop-sculpt').style.display = (mode === 'sculpt') ? 'block' : 'none';
+        
+        if(mode === 'sculpt') {
+            transform.detach();
+            orbit.enabled = true;
+        } else {
+            if(currentMesh) transform.attach(currentMesh);
+        }
+    };
+
+    window.gizmo = function(mode) {
+        transform.setMode(mode);
+    };
+
+    window.updateMaterial = function() {
+        if(!currentMesh) return;
+        currentMesh.material.color.set(document.getElementById('baseColor').value);
+        currentMesh.material.roughness = document.getElementById('roughness').value;
+        currentMesh.material.metalness = document.getElementById('metallic').value;
+    };
+
+    window.exportOBJ = function() {
+        const exporter = new OBJExporter();
+        const data = exporter.parse(scene);
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(new Blob([data], {type: 'text/plain'}));
+        link.download = 'capitan_lab_model.obj';
+        link.click();
+    };
+
+    function updateUI() {
+        if(currentMesh) {
+            document.getElementById('v-count').innerText = currentMesh.geometry.attributes.position.count;
+            const outliner = document.getElementById('outliner');
+            outliner.innerHTML = `<div><i class="fas fa-cube"></i> Mesh.001</div>`;
+        }
     }
 
     function animate() {
         requestAnimationFrame(animate);
         renderer.render(scene, camera);
     }
+
+    window.onresize = () => {
+        camera.aspect = viewport.clientWidth / viewport.clientHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(viewport.clientWidth, viewport.clientHeight);
+    };
 </script>
 </body>
 </html>
