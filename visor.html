@@ -12,27 +12,25 @@
         :root {
             --accent: #00d4ff;
             --bg: #050508;
-            --panel: rgba(20, 20, 25, 0.9);
+            --panel: rgba(20, 20, 25, 0.95);
         }
 
         body, html { margin: 0; padding: 0; width: 100%; height: 100%; background: var(--bg); color: white; font-family: 'Inter', sans-serif; overflow: hidden; }
 
-        /* EL VISOR: Ahora con filtros dinámicos */
         model-viewer { 
             width: 100%; height: 100vh; 
             background: radial-gradient(circle at 50% 40%, #1a1a2e 0%, #050508 100%);
             transition: filter 0.3s ease; 
         }
 
-        .header { position: absolute; top: 0; width: 100%; padding: 20px; display: flex; justify-content: space-between; align-items: center; z-index: 100; box-sizing: border-box; }
-        .back-link { pointer-events: auto; text-decoration: none; color: white; background: rgba(255,255,255,0.1); padding: 10px 20px; border-radius: 8px; font-size: 0.8rem; border: 1px solid rgba(255,255,255,0.2); }
+        .header { position: absolute; top: 0; width: 100%; padding: 20px; display: flex; justify-content: space-between; align-items: center; z-index: 100; box-sizing: border-box; pointer-events: none; }
+        .back-link { pointer-events: auto; text-decoration: none; color: white; background: rgba(255,255,255,0.1); padding: 10px 20px; border-radius: 8px; font-size: 0.8rem; border: 1px solid rgba(255,255,255,0.2); backdrop-filter: blur(10px); }
 
-        /* INSPECTOR MEJORADO */
         .inspector {
             position: absolute; right: 20px; top: 80px; width: 260px;
             background: var(--panel); border: 1px solid rgba(255,255,255,0.1);
             border-radius: 15px; padding: 20px; backdrop-filter: blur(20px);
-            z-index: 100; max-height: 80vh; overflow-y: auto;
+            z-index: 100; max-height: 85vh; overflow-y: auto;
         }
 
         h4 { font-size: 0.65rem; color: var(--accent); text-transform: uppercase; letter-spacing: 2px; margin: 20px 0 10px 0; border-bottom: 1px solid #333; padding-bottom: 5px; }
@@ -42,11 +40,11 @@
         .btn-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; }
         .btn-mode { 
             background: #111; border: 1px solid #333; color: #777; padding: 8px; 
-            border-radius: 6px; font-size: 0.7rem; cursor: pointer; transition: 0.2s;
+            border-radius: 6px; font-size: 0.7rem; cursor: pointer; transition: 0.2s; font-weight: bold;
         }
-        .btn-mode.active { background: var(--accent); color: black; border-color: var(--accent); font-weight: bold; }
+        .btn-mode.active { background: var(--accent); color: black; border-color: var(--accent); }
 
-        input[type="range"] { width: 100%; accent-color: var(--accent); cursor: pointer; }
+        input[type="range"] { width: 100%; accent-color: var(--accent); cursor: pointer; height: 4px; }
 
         .stats-chip {
             position: absolute; bottom: 20px; left: 20px;
@@ -59,7 +57,7 @@
 
     <div class="header">
         <a href="index.html" class="back-link">← PORTAFOLIO</a>
-        <div id="model-name" style="font-weight: 800; letter-spacing: 1px;">CARGANDO DRIVE ENGINE...</div>
+        <div id="model-name" style="font-weight: 800; letter-spacing: 1px; color: var(--accent); font-size: 0.7rem;">HQ RENDER ENGINE</div>
     </div>
 
     <div class="inspector">
@@ -77,15 +75,6 @@
             <input type="range" min="0" max="3" step="0.1" value="1" oninput="viewer.exposure = this.value; document.getElementById('v-exp').innerText=this.value">
         </div>
 
-        <div class="control-group">
-            <div class="label-row"><span>HDR Ambiente</span></div>
-            <select class="btn-mode" style="width:100%" onchange="viewer.environmentImage = this.value">
-                <option value="neutral">Estudio Neutro</option>
-                <option value="https://modelviewer.dev/shared-assets/environments/spruit_sunrise_1k_hdr.hdr">Amanecer</option>
-                <option value="https://modelviewer.dev/shared-assets/environments/aircraft_workshop_01_1k.hdr">Taller Industrial</option>
-            </select>
-        </div>
-
         <h4>Post-Process (Imagen)</h4>
         <div class="control-group">
             <div class="label-row"><span>Brillo</span></div>
@@ -101,9 +90,7 @@
         </div>
     </div>
 
-    <div class="stats-chip" id="stats">
-        POLYGONS: -- | VERTS: --
-    </div>
+    <div class="stats-chip" id="stats">POLYGONS: -- | VERTS: --</div>
 
     <model-viewer id="main-visor" 
         src="" 
@@ -119,34 +106,36 @@
         const viewer = document.querySelector("#main-visor");
         let originalMaterials = new Map();
 
-        // 1. CARGAR DESDE DRIVE (URL PARAMS)
+        // 1. CARGAR DESDE LA URL (Compatible con GitHub Releases y enlaces largos)
         const params = new URLSearchParams(window.location.search);
         const modelUrl = params.get('model');
         
         if(modelUrl) {
-            viewer.src = modelUrl;
-            // Extraer un nombre bonito del ID si es posible
-            document.querySelector("#model-name").innerText = "INSPECTING REMOTE MODEL";
+            // Decodificamos la URL para asegurar que GitHub Releases funcione
+            const cleanUrl = decodeURIComponent(modelUrl);
+            viewer.src = cleanUrl;
+            document.querySelector("#model-name").innerText = "LOADING HQ ASSET...";
         }
 
         // 2. LOGICA DE MATERIALES Y WIREFRAME
         viewer.addEventListener('load', () => {
+            document.querySelector("#model-name").innerText = "INSPECTOR MODE ACTIVE";
             const scene = viewer.toObject3D();
             let polys = 0;
             let verts = 0;
 
             scene.traverse(node => {
                 if (node.isMesh) {
-                    // Guardar material original para restaurar
-                    originalMaterials.set(node.uuid, node.material.clone());
+                    // Backup robusto del material
+                    originalMaterials.set(node.uuid, node.material);
                     
-                    // Contar geometría
+                    // Stats
                     polys += node.geometry.index ? node.geometry.index.count / 3 : node.geometry.attributes.position.count / 3;
                     verts += node.geometry.attributes.position.count;
 
-                    // Crear Wireframe como un hijo para que no falle el material principal
+                    // Capa Wireframe independiente
                     const wireGeo = new THREE.WireframeGeometry(node.geometry);
-                    const wireMat = new THREE.LineBasicMaterial({ color: 0x00d4ff, transparent: true, opacity: 0.4 });
+                    const wireMat = new THREE.LineBasicMaterial({ color: 0x00d4ff, transparent: true, opacity: 0.3 });
                     const wireframe = new THREE.LineSegments(wireGeo, wireMat);
                     wireframe.name = "wireframe_layer";
                     wireframe.visible = false;
@@ -157,7 +146,7 @@
             document.getElementById('stats').innerText = `POLYS: ${Math.round(polys).toLocaleString()} | VERTS: ${Math.round(verts).toLocaleString()}`;
         });
 
-        // 3. CAMBIAR MODOS DE RENDER
+        // 3. CAMBIAR MODOS DE RENDER (Corregido para materiales externos)
         function updateRender(mode) {
             document.querySelectorAll('.btn-mode').forEach(b => b.classList.remove('active'));
             document.getElementById(`m-${mode}`).classList.add('active');
@@ -166,23 +155,21 @@
             scene.traverse(node => {
                 if (node.isMesh) {
                     const wireLayer = node.children.find(c => c.name === "wireframe_layer");
-                    
-                    // Reset
                     if (wireLayer) wireLayer.visible = (mode === 'wire');
                     
                     if (mode === 'clay') {
                         node.material = new THREE.MeshStandardMaterial({ color: 0x666666, roughness: 0.8 });
                     } else if (mode === 'uv') {
-                        node.material = new THREE.MeshStandardMaterial({ color: 0x00d4ff, wireframe: false, opacity: 0.3, transparent: true });
+                        node.material = new THREE.MeshStandardMaterial({ color: 0x00d4ff, transparent: true, opacity: 0.2 });
                     } else {
-                        // Restaurar original
+                        // Restaurar exactamente el material original
                         node.material = originalMaterials.get(node.uuid);
                     }
                 }
             });
         }
 
-        // 4. FILTROS DE IMAGEN (BRILLO/CONTRASTE)
+        // 4. FILTROS DE IMAGEN
         function applyFilters() {
             const b = document.getElementById('p-bright').value;
             const c = document.getElementById('p-contrast').value;
