@@ -2,180 +2,164 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>CapitanBlue | Blender 2.79 Web Engine</title>
-    <script src="https://unpkg.com/three@0.157.0/build/three.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/three@0.157.0/examples/jsm/controls/TransformControls.js"></script>
-    <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.3.0/model-viewer.min.js"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-
-    <style>
-        :root {
-            --b-dark: #1d1d1d; --b-panel: #303030; --b-header: #424242;
-            --b-accent: #e58d2a; --b-text: #bdbdbd; --border: #1a1a1a;
+    <title>Capitan-Lab Ultimate | Professional Suite</title>
+    <script async src="https://unpkg.com/es-module-shims@1.8.0/dist/es-module-shims.js"></script>
+    <script type="importmap">
+    {
+        "imports": {
+            "three": "https://unpkg.com/three@0.157.0/build/three.module.js",
+            "three/addons/": "https://unpkg.com/three@0.157.0/examples/jsm/"
         }
-
-        body, html { margin: 0; padding: 0; width: 100%; height: 100%; background: #111; color: var(--b-text); font-family: 'Inter', sans-serif; font-size: 11px; overflow: hidden; }
-
-        .blender-grid { display: grid; grid-template-columns: 220px 1fr 300px; grid-template-rows: 26px 1fr 24px; height: 100vh; }
-
-        /* UI COMPONENTS */
-        header, footer { grid-column: 1 / 4; background: var(--b-header); border: 1px solid var(--border); display: flex; align-items: center; padding: 0 10px; z-index: 100; }
-        .t-panel { background: var(--b-panel); border-right: 1px solid var(--border); display: flex; flex-direction: column; overflow-y: auto; }
-        .n-panel { background: var(--b-panel); border-left: 1px solid var(--border); overflow-y: auto; }
+    }
+    </script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        :root { --b-dark: #1d1d1d; --b-panel: #303030; --b-header: #424242; --b-accent: #e58d2a; --border: #111; }
+        body, html { margin: 0; padding: 0; height: 100%; background: #111; color: #bdbdbd; font-family: 'Inter', sans-serif; font-size: 11px; overflow: hidden; }
         
-        /* VIEWPORT */
-        .viewport { position: relative; background: #393939; overflow: hidden; }
-        model-viewer { width: 100%; height: 100%; --poster-color: transparent; }
+        .blender-layout { display: grid; grid-template-columns: 240px 1fr 280px; grid-template-rows: 28px 1fr 24px; height: 100vh; }
+        header, footer { grid-column: 1 / 4; background: var(--b-header); border: 1px solid var(--border); display: flex; align-items: center; padding: 0 10px; z-index: 100; }
+        
+        /* TABS SUPERIORES (Layouts) */
+        .layout-tabs { display: flex; gap: 2px; margin-left: 20px; }
+        .tab { padding: 4px 12px; background: #333; cursor: pointer; border-radius: 4px 4px 0 0; border: 1px solid var(--border); border-bottom: none; }
+        .tab.active { background: var(--b-panel); color: var(--b-accent); font-weight: bold; }
 
-        /* BLENDER STYLE UI */
-        .p-head { background: #4d4d4d; padding: 5px 10px; color: #fff; font-weight: bold; border-bottom: 1px solid #222; display: flex; align-items: center; gap: 8px; }
-        .group { padding: 10px; border-bottom: 1px solid var(--border); }
-        .b-btn { background: #666; border: 1px solid #333; color: #eee; padding: 4px 8px; cursor: pointer; font-size: 10px; width: 100%; margin-bottom: 2px; text-align: left; }
-        .b-btn:hover { background: #777; }
+        .sidebar { background: var(--b-panel); border: 1px solid var(--border); overflow-y: auto; padding: 10px; }
+        .p-head { background: #4d4d4d; padding: 6px; color: #fff; font-weight: bold; margin: -10px -10px 10px -10px; border-bottom: 1px solid #111; font-size: 10px; text-transform: uppercase; }
+        
+        .b-btn { background: #555; border: 1px solid #333; color: #eee; padding: 6px; cursor: pointer; width: 100%; margin-bottom: 4px; text-align: left; font-size: 10px; border-radius: 2px; }
+        .b-btn:hover { background: #666; }
         .b-btn.active { background: var(--b-accent); color: #000; }
 
-        .prop-input { display: grid; grid-template-columns: 80px 1fr; gap: 5px; margin-bottom: 4px; align-items: center; }
-        input[type="number"], input[type="range"], select { background: #1a1a1a; border: 1px solid #000; color: var(--b-accent); font-size: 10px; padding: 2px; width: 100%; }
-
-        /* HOTKEYS INFO */
-        .hotkeys { position: absolute; top: 10px; left: 10px; background: rgba(0,0,0,0.5); padding: 10px; border-radius: 4px; pointer-events: none; }
+        #viewport { background: #393939; position: relative; }
+        .brush-cursor { position: absolute; border: 1px solid white; border-radius: 50%; pointer-events: none; display: none; transform: translate(-50%, -50%); }
     </style>
 </head>
 <body>
 
-<div class="blender-grid">
+<div class="blender-layout">
     <header>
-        <span style="color:white; margin-right:20px; font-weight:bold;">CAPITAN-ENGINE 2.79</span>
-        <span style="opacity:0.6">File | Render | Window | Help</span>
+        <span style="font-weight:900; color:var(--b-accent);">CAPITAN-LAB</span>
+        <div class="layout-tabs">
+            <div class="tab active" onclick="setContext('layout')">Layout</div>
+            <div class="tab" onclick="setContext('sculpt')">Sculpting</div>
+            <div class="tab" onclick="setContext('paint')">Texture Paint</div>
+            <div class="tab" onclick="setContext('rig')">Rigging</div>
+        </div>
     </header>
 
-    <div class="t-panel">
-        <div class="p-head"><i class="fas fa-tools"></i> Herramientas</div>
-        <div class="group">
-            <p style="color:var(--b-accent); margin-top:0;">Transformación</p>
-            <button class="b-btn active" id="btn-translate" onclick="setGizmo('translate')">G - Mover</button>
-            <button class="b-btn" id="btn-rotate" onclick="setGizmo('rotate')">R - Rotar</button>
-            <button class="b-btn" id="btn-scale" onclick="setGizmo('scale')">S - Escalar</button>
+    <div class="sidebar" id="tool-panel">
+        <div id="tools-layout">
+            <div class="p-head">Add Geometry</div>
+            <button class="b-btn" onclick="addObj('cube')">Cube</button>
+            <button class="b-btn" onclick="addObj('sphere')">Sphere</button>
         </div>
-        <div class="group">
-            <p style="color:var(--b-accent)">Modos</p>
-            <button class="b-btn active" id="btn-object">Object Mode</button>
-            <button class="b-btn" id="btn-edit" onclick="toggleEditMode()">Edit Mode (Tab)</button>
+
+        <div id="tools-sculpt" style="display:none;">
+            <div class="p-head">Brushes</div>
+            <button class="b-btn active">Draw</button>
+            <button class="b-btn">Inflate</button>
+            <button class="b-btn">Smooth</button>
+            <div class="p-head" style="margin-top:10px;">Settings</div>
+            <label>Radius</label><input type="range" style="width:100%">
         </div>
-        <div class="group">
-            <p style="color:var(--b-accent)">Rigging / Anim</p>
-            <button class="b-btn" onclick="alert('IK Solver activado')">Basic Rig (Humanoid)</button>
-            <button class="b-btn">IK / FK Toggle</button>
+
+        <div id="tools-paint" style="display:none;">
+            <div class="p-head">Colors</div>
+            <input type="color" id="paint-color" style="width:100%; height:40px;">
+            <button class="b-btn" style="margin-top:10px;">Flood Fill</button>
+        </div>
+
+        <div id="tools-rig" style="display:none;">
+            <div class="p-head">Skeleton</div>
+            <button class="b-btn" onclick="addBone()">Add Bone (Shift+A)</button>
+            <button class="b-btn">Generate Rig</button>
         </div>
     </div>
 
-    <div class="viewport">
-        <div class="hotkeys">
-            G: Move | R: Rotate | S: Scale | Tab: Edit Mode
-        </div>
-        <model-viewer id="lab" src="modelos/sapo.glb" camera-controls shadow-intensity="1" environment-image="neutral" exposure="1">
-            </model-viewer>
+    <div id="viewport">
+        <div id="brush" class="brush-cursor"></div>
     </div>
 
-    <div class="n-panel">
-        <div class="p-head"><i class="fas fa-certificate"></i> Materiales</div>
-        <div class="group">
-            <div class="prop-input"><span>Color</span><input type="color" id="m-color" onchange="updateMat()"></div>
-            <div class="prop-input"><span>Metallic</span><input type="range" id="m-metal" min="0" max="1" step="0.01" oninput="updateMat()"></div>
-            <div class="prop-input"><span>Roughness</span><input type="range" id="m-rough" min="0" max="1" step="0.01" oninput="updateMat()"></div>
-            <div class="prop-input"><span>Bump/Norm</span><input type="file" style="font-size:8px;"></div>
-        </div>
-
-        <div class="p-head"><i class="fas fa-bone"></i> Rigging (Vertex Groups)</div>
-        <div class="group">
-            <select size="5" style="height:80px;">
-                <option>Bone.Root</option>
-                <option>Bone.Spine</option>
-                <option>Bone.Arm.L</option>
-                <option>Bone.Arm.R</option>
-            </select>
-            <button class="b-btn" style="margin-top:5px;">Assign Weight</button>
-        </div>
+    <div class="sidebar">
+        <div class="p-head">Scene Collection</div>
+        <div id="outliner" style="background:#222; height:150px; margin-bottom:10px; padding:5px;"></div>
+        
+        <div class="p-head">Exporter</div>
+        <button class="b-btn" style="background:var(--b-accent); color:000;" onclick="exportOBJ()">Export .OBJ</button>
+        <button class="b-btn" style="background:#444;" onclick="alert('FBX via GLTFExporter...')">Export .FBX (Beta)</button>
     </div>
 
     <footer>
-        <span>v2.79.0 | Verts: 45.2k | Tris: 82.1k | Objects: 1/12</span>
+        <span>Editor Mode: <span id="current-mode">LAYOUT</span> | Capitan Engine 2026</span>
     </footer>
 </div>
 
 <script type="module">
-    import { TransformControls } from 'https://cdn.jsdelivr.net/npm/three@0.157.0/examples/jsm/controls/TransformControls.js';
+    import * as THREE from 'three';
+    import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+    import { TransformControls } from 'three/addons/controls/TransformControls.js';
+    import { OBJExporter } from 'three/addons/exporters/OBJExporter.js';
 
-    const viewer = document.querySelector("#lab");
-    let transformControl;
-    let editMode = false;
+    let scene, camera, renderer, orbit, transform;
+    const container = document.getElementById('viewport');
 
-    viewer.addEventListener('load', () => {
-        const scene = viewer.toObject3D();
-        const renderer = viewer[Object.getOwnPropertySymbols(viewer).find(s => s.description === 'renderer')];
-        const camera = viewer[Object.getOwnPropertySymbols(viewer).find(s => s.description === 'camera')];
+    init();
+    animate();
 
-        // INYECTAR GIZMO (TransformControls)
-        // Nota: model-viewer oculta su escena interna, usamos este bridge:
-        const threeScene = scene.parent; 
-        transformControl = new TransformControls(camera, viewer.shadowRoot.querySelector('canvas'));
+    function init() {
+        scene = new THREE.Scene();
+        scene.background = new THREE.Color(0x393939);
+        camera = new THREE.PerspectiveCamera(50, container.clientWidth / container.clientHeight, 0.1, 1000);
+        camera.position.set(10, 10, 10);
+
+        renderer = new THREE.WebGLRenderer({ antialias: true });
+        renderer.setSize(container.clientWidth, container.clientHeight);
+        container.appendChild(renderer.domElement);
+
+        scene.add(new THREE.GridHelper(20, 20, 0x222222, 0x444444));
+        scene.add(new THREE.AmbientLight(0xffffff, 0.5));
         
-        // Seleccionamos la malla principal del modelo
-        scene.traverse(node => {
-            if(node.isMesh) {
-                transformControl.attach(node);
-            }
-        });
+        orbit = new OrbitControls(camera, renderer.domElement);
+        transform = new TransformControls(camera, renderer.domElement);
+        scene.add(transform);
 
-        // Eventos de teclado estilo Blender
-        window.addEventListener('keydown', (e) => {
-            switch(e.key.toLowerCase()) {
-                case 'g': setGizmo('translate'); break;
-                case 'r': setGizmo('rotate'); break;
-                case 's': setGizmo('scale'); break;
-                case 'tab': toggleEditMode(); e.preventDefault(); break;
-            }
-        });
-    });
+        // Cambiar contextos (Tabs)
+        window.setContext = function(mode) {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            event.target.classList.add('active');
+            
+            // Ocultar todos los paneles
+            ['layout', 'sculpt', 'paint', 'rig'].forEach(m => {
+                document.getElementById('tools-' + m).style.display = 'none';
+            });
+            // Mostrar seleccionado
+            document.getElementById('tools-' + mode).style.display = 'block';
+            document.getElementById('current-mode').innerText = mode.toUpperCase();
+        };
 
-    window.setGizmo = function(mode) {
-        if(!transformControl) return;
-        transformControl.setMode(mode);
-        document.querySelectorAll('.b-btn').forEach(b => b.classList.remove('active'));
-        document.getElementById(`btn-${mode === 'translate' ? 'translate' : mode === 'rotate' ? 'rotate' : 'scale'}`).classList.add('active');
-    };
+        window.addObj = function(type) {
+            let geo = type === 'cube' ? new THREE.BoxGeometry(2,2,2) : new THREE.SphereGeometry(2, 32, 32);
+            let mesh = new THREE.Mesh(geo, new THREE.MeshStandardMaterial({color: 0x888888}));
+            scene.add(mesh);
+            transform.attach(mesh);
+        };
 
-    window.toggleEditMode = function() {
-        editMode = !editMode;
-        const btn = document.getElementById('btn-edit');
-        if(editMode) {
-            btn.classList.add('active');
-            // Aquí activaríamos el wireframe y visualización de vértices
-            viewer.model.materials.forEach(m => m.pbrMetallicRoughness.setBaseColorFactor([0.1, 0.4, 0.8, 1]));
-        } else {
-            btn.classList.remove('active');
-            location.reload(); // Reset para volver a Object Mode
-        }
-    };
+        window.exportOBJ = function() {
+            const exporter = new OBJExporter();
+            const data = exporter.parse(scene);
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(new Blob([data], {type: 'text/plain'}));
+            link.download = 'model_capitan.obj';
+            link.click();
+        };
+    }
 
-    window.updateMat = function() {
-        const material = viewer.model.materials[0];
-        const color = document.getElementById('m-color').value;
-        const metal = document.getElementById('m-metal').value;
-        const rough = document.getElementById('m-rough').value;
-
-        material.pbrMetallicRoughness.setBaseColorFactor(hexToRgb(color));
-        material.setMetallicFactor(metal);
-        material.setRoughnessFactor(rough);
-    };
-
-    function hexToRgb(hex) {
-        var r = parseInt(hex.slice(1, 3), 16) / 255;
-        var g = parseInt(hex.slice(3, 5), 16) / 255;
-        var b = parseInt(hex.slice(5, 7), 16) / 255;
-        return [r, g, b, 1];
+    function animate() {
+        requestAnimationFrame(animate);
+        renderer.render(scene, camera);
     }
 </script>
-
 </body>
 </html>
