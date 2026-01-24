@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>CapitanBlue | Lab 3D (Blender Mode)</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+    <style>
+        :root {
+            --blender-bg: #393939;
+            --blender-panel: #282828;
+            --blender-orange: #e5ad24;
+            --blender-text: #eeeeee;
+        }
+
+        body { margin: 0; background: var(--blender-bg); font-family: 'Segoe UI', sans-serif; overflow: hidden; color: var(--blender-text); display: flex; }
+
+        /* Panel Lateral Izquierdo (Tools) */
+        #tools-shelf {
+            width: 200px; background: var(--blender-panel);
+            border-right: 1px solid #111; display: flex; flex-direction: column;
+            padding: 10px; z-index: 100;
+        }
+
+        .tool-group { margin-bottom: 20px; border-bottom: 1px solid #444; padding-bottom: 10px; }
+        .tool-group h4 { font-size: 11px; text-transform: uppercase; color: #888; margin: 5px 0; }
+        
+        button {
+            width: 100%; background: #555; border: 1px solid #222; color: white;
+            padding: 6px; margin: 2px 0; cursor: pointer; font-size: 12px; text-align: left;
+            border-radius: 3px;
+        }
+        button:hover { background: #666; }
+        button.active { background: var(--blender-orange); color: black; }
+
+        /* Lienzo 3D */
+        #canvas-container { flex-grow: 1; position: relative; }
+
+        /* Panel Derecho (Properties) */
+        #properties-panel {
+            width: 250px; background: var(--blender-panel);
+            border-left: 1px solid #111; padding: 15px; z-index: 100;
+        }
+
+        .prop-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; font-size: 12px; }
+        input[type="range"] { width: 100px; }
+
+        .header-lab {
+            position: absolute; top: 10px; left: 220px;
+            background: rgba(0,0,0,0.5); padding: 5px 15px; border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="tools-shelf">
+        <div class="tool-group">
+            <h4>Primitivas</h4>
+            <button onclick="addMesh('cube')">Cubo</button>
+            <button onclick="addMesh('sphere')">Esfera</button>
+            <button onclick="addMesh('cylinder')">Cilindro</button>
+        </div>
+
+        <div class="tool-group">
+            <h4>Herramientas</h4>
+            <button id="btn-extrude" onclick="toggleMode('extrude')">Deformar (Z)</button>
+            <button id="btn-mirror" onclick="toggleMirror()">Simetría (X)</button>
+            <button onclick="resetMesh()">Reset Mesh</button>
+        </div>
+
+        <div class="tool-group" style="margin-top: auto;">
+            <a href="index.html" style="color: var(--blender-orange); text-decoration: none; font-size: 12px;">← Salir al Portafolio</a>
+        </div>
+    </div>
+
+    <div id="canvas-container">
+        <div class="header-lab">
+            <span style="color: var(--blender-orange);">●</span> Modo Objeto | <small>CapitanBlue Engine v1.0</small>
+        </div>
+    </div>
+
+    <div id="properties-panel">
+        <h4>Transformar</h4>
+        <div class="prop-row"> <span>Escala X</span> <input type="range" min="0.1" max="3" step="0.1" value="1" oninput="updateScale('x', this.value)"> </div>
+        <div class="prop-row"> <span>Escala Y</span> <input type="range" min="0.1" max="3" step="0.1" value="1" oninput="updateScale('y', this.value)"> </div>
+        <div class="prop-row"> <span>Escala Z</span> <input type="range" min="0.1" max="3" step="0.1" value="1" oninput="updateScale('z', this.value)"> </div>
+        
+        <h4 style="margin-top:30px;">Modificadores</h4>
+        <div class="prop-row"> <span>Wireframe</span> <input type="checkbox" onchange="toggleWireframe(this.checked)"> </div>
+        <div class="prop-row"> <span>Subdividir</span> <button onclick="applySubdivision()" style="width: auto;">Aplicar</button> </div>
+    </div>
+
+    <script>
+        let scene, camera, renderer, controls, currentMesh, mirrorMesh;
+        let isMirrorActive = false;
+
+        init();
+        animate();
+
+        function init() {
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0x393939);
+
+            camera = new THREE.PerspectiveCamera(75, (window.innerWidth - 450) / window.innerHeight, 0.1, 1000);
+            camera.position.set(3, 3, 3);
+
+            renderer = new THREE.WebGLRenderer({ antialias: true });
+            renderer.setSize(window.innerWidth - 450, window.innerHeight);
+            document.getElementById('canvas-container').appendChild(renderer.domElement);
+
+            controls = new THREE.OrbitControls(camera, renderer.domElement);
+
+            // Grid estilo Blender
+            const grid = new THREE.GridHelper(10, 10, 0x111111, 0x555555);
+            scene.add(grid);
+
+            // Iluminación
+            const light = new THREE.DirectionalLight(0xffffff, 1);
+            light.position.set(5, 10, 7.5);
+            scene.add(light);
+            scene.add(new THREE.AmbientLight(0x404040));
+
+            addMesh('cube');
+        }
+
+        function addMesh(type) {
+            if(currentMesh) scene.remove(currentMesh);
+            if(mirrorMesh) scene.remove(mirrorMesh);
+
+            let geometry;
+            if(type === 'cube') geometry = new THREE.BoxGeometry(1, 1, 1);
+            if(type === 'sphere') geometry = new THREE.SphereGeometry(0.7, 32, 32);
+            if(type === 'cylinder') geometry = new THREE.CylinderGeometry(0.5, 0.5, 1, 32);
+
+            const material = new THREE.MeshStandardMaterial({ color: 0x888888, flatShading: true });
+            currentMesh = new THREE.Mesh(geometry, material);
+            scene.add(currentMesh);
+            
+            if(isMirrorActive) createMirror();
+        }
+
+        function toggleMirror() {
+            isMirrorActive = !isMirrorActive;
+            document.getElementById('btn-mirror').classList.toggle('active');
+            if(isMirrorActive) createMirror();
+            else if(mirrorMesh) scene.remove(mirrorMesh);
+        }
+
+        function createMirror() {
+            if(mirrorMesh) scene.remove(mirrorMesh);
+            mirrorMesh = currentMesh.clone();
+            mirrorMesh.scale.x = -currentMesh.scale.x;
+            mirrorMesh.position.x = -currentMesh.position.x - 2; // Desfase para ver la simetría
+            scene.add(mirrorMesh);
+        }
+
+        function updateScale(axis, val) {
+            currentMesh.scale[axis] = parseFloat(val);
+            if(isMirrorActive) mirrorMesh.scale[axis] = parseFloat(val) * (axis === 'x' ? -1 : 1);
+        }
+
+        function toggleWireframe(val) {
+            currentMesh.material.wireframe = val;
+            if(mirrorMesh) mirrorMesh.material.wireframe = val;
+        }
+
+        function resetMesh() {
+            currentMesh.scale.set(1,1,1);
+            currentMesh.position.set(0,0,0);
+            if(mirrorMesh) createMirror();
+        }
+
+        function animate() {
+            requestAnimationFrame(animate);
+            if(isMirrorActive && mirrorMesh) {
+                mirrorMesh.position.y = currentMesh.position.y;
+                mirrorMesh.position.z = currentMesh.position.z;
+                mirrorMesh.rotation.copy(currentMesh.rotation);
+            }
+            renderer.render(scene, camera);
+        }
+
+        window.addEventListener('resize', () => {
+            camera.aspect = (window.innerWidth - 450) / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth - 450, window.innerHeight);
+        });
+    </script>
+</body>
+</html>
