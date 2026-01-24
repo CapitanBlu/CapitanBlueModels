@@ -11,106 +11,98 @@
     <style>
         :root {
             --accent: #00d4ff;
-            --bg: #0a0a0f;
-            --panel: rgba(15, 15, 20, 0.95);
+            --bg: #050508;
+            --panel: rgba(20, 20, 25, 0.9);
         }
 
         body, html { margin: 0; padding: 0; width: 100%; height: 100%; background: var(--bg); color: white; font-family: 'Inter', sans-serif; overflow: hidden; }
 
-        model-viewer { width: 100%; height: 100vh; --poster-color: transparent; background: radial-gradient(circle at 50% 40%, #1a1a2e 0%, #050508 100%); }
+        /* EL VISOR: Ahora con filtros dinámicos */
+        model-viewer { 
+            width: 100%; height: 100vh; 
+            background: radial-gradient(circle at 50% 40%, #1a1a2e 0%, #050508 100%);
+            transition: filter 0.3s ease; 
+        }
 
-        /* UI SUPERIOR */
-        .header { position: absolute; top: 0; width: 100%; padding: 25px; display: flex; justify-content: space-between; align-items: center; z-index: 100; pointer-events: none; }
-        .back-link { pointer-events: auto; text-decoration: none; color: #666; font-size: 0.75rem; font-weight: 800; letter-spacing: 1px; transition: 0.3s; border: 1px solid #333; padding: 8px 15px; border-radius: 5px; }
-        .back-link:hover { color: var(--accent); border-color: var(--accent); background: rgba(0,212,255,0.05); }
+        .header { position: absolute; top: 0; width: 100%; padding: 20px; display: flex; justify-content: space-between; align-items: center; z-index: 100; box-sizing: border-box; }
+        .back-link { pointer-events: auto; text-decoration: none; color: white; background: rgba(255,255,255,0.1); padding: 10px 20px; border-radius: 8px; font-size: 0.8rem; border: 1px solid rgba(255,255,255,0.2); }
 
-        /* INSPECTOR LATERAL */
+        /* INSPECTOR MEJORADO */
         .inspector {
-            position: absolute; right: 20px; top: 80px; width: 280px;
+            position: absolute; right: 20px; top: 80px; width: 260px;
             background: var(--panel); border: 1px solid rgba(255,255,255,0.1);
-            border-radius: 12px; padding: 20px; backdrop-filter: blur(15px);
-            z-index: 100; box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            border-radius: 15px; padding: 20px; backdrop-filter: blur(20px);
+            z-index: 100; max-height: 80vh; overflow-y: auto;
         }
 
-        .inspector h4 { margin: 0 0 15px 0; font-size: 0.7rem; color: var(--accent); text-transform: uppercase; letter-spacing: 2px; border-bottom: 1px solid #333; padding-bottom: 8px; }
-        .control-group { margin-bottom: 18px; }
-        .label-row { display: flex; justify-content: space-between; font-size: 0.7rem; margin-bottom: 8px; color: #888; }
+        h4 { font-size: 0.65rem; color: var(--accent); text-transform: uppercase; letter-spacing: 2px; margin: 20px 0 10px 0; border-bottom: 1px solid #333; padding-bottom: 5px; }
+        .control-group { margin-bottom: 15px; }
+        .label-row { display: flex; justify-content: space-between; font-size: 0.75rem; margin-bottom: 5px; color: #ccc; }
         
-        .mode-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+        .btn-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; }
         .btn-mode { 
-            background: #1a1a1a; border: 1px solid #333; 
-            color: #888; padding: 10px; border-radius: 6px; font-size: 0.65rem; 
-            cursor: pointer; transition: 0.2s; font-weight: 600;
+            background: #111; border: 1px solid #333; color: #777; padding: 8px; 
+            border-radius: 6px; font-size: 0.7rem; cursor: pointer; transition: 0.2s;
         }
-        .btn-mode:hover { border-color: #555; color: white; }
-        .btn-mode.active { background: var(--accent); color: black; border-color: var(--accent); }
+        .btn-mode.active { background: var(--accent); color: black; border-color: var(--accent); font-weight: bold; }
 
-        input[type="range"] { width: 100%; accent-color: var(--accent); height: 4px; cursor: pointer; }
+        input[type="range"] { width: 100%; accent-color: var(--accent); cursor: pointer; }
 
-        /* STATS */
         .stats-chip {
-            position: absolute; bottom: 25px; left: 25px;
-            background: rgba(0,0,0,0.8); padding: 10px 18px; border-radius: 6px;
-            font-size: 11px; font-family: 'JetBrains Mono', monospace; color: var(--accent);
-            border: 1px solid rgba(0,212,255,0.2); pointer-events: none;
-        }
-
-        /* ANOTACIONES (HOTSPOTS) */
-        .Hotspot {
-            background: #fff; border-radius: 32px; border: 0; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.25);
-            box-sizing: border-box; cursor: pointer; height: 20px; padding: 8px; position: relative;
-            transition: opacity 0.3s; width: 20px; border: 2px solid var(--accent);
-        }
-        .Hotspot:not([data-visible]) { background: transparent; border: 4px solid #fff; opacity: 0.3; pointer-events: none; }
-        .Hotspot:focus { border: 4px solid var(--accent); height: 32px; outline: none; width: 32px; }
-        .Hotspot > * { opacity: 1; transform: translateY(-50%); }
-
-        .HotspotAnnotation {
-            background: var(--panel); border-radius: 4px; box-shadow: 0 2px 10px rgba(0, 0, 0, 0.25);
-            color: #fff; display: block; font-family: Futura, Helvetica Neue, sans-serif; font-size: 12px;
-            font-weight: 700; left: calc(100% + 1em); max-width: 200px; overflow-wrap: break-word;
-            padding: 0.5em 1em; position: absolute; top: 50%; width: max-content;
-            border-left: 3px solid var(--accent); pointer-events: none;
+            position: absolute; bottom: 20px; left: 20px;
+            background: rgba(0,0,0,0.8); padding: 12px; border-radius: 8px;
+            font-size: 10px; font-family: monospace; color: var(--accent); border: 1px solid rgba(0,212,255,0.3);
         }
     </style>
 </head>
 <body>
 
     <div class="header">
-        <a href="index.html" class="back-link">← VOLVER AL PORTAFOLIO</a>
-        <h2 id="model-name" style="margin:0; font-size: 0.9rem; font-weight: 800; color: white;">MODELO 3D</h2>
+        <a href="index.html" class="back-link">← PORTAFOLIO</a>
+        <div id="model-name" style="font-weight: 800; letter-spacing: 1px;">CARGANDO DRIVE ENGINE...</div>
     </div>
 
     <div class="inspector">
-        <h4>Renderizado</h4>
-        <div class="control-group">
-            <div class="mode-grid">
-                <button class="btn-mode active" id="m-final" onclick="setMode('final')">Final</button>
-                <button class="btn-mode" id="m-wire" onclick="setMode('wire')">Wireframe</button>
-                <button class="btn-mode" id="m-clay" onclick="setMode('clay')">Clay</button>
-                <button class="btn-mode" id="m-uv" onclick="setMode('uv')">Check UV</button>
-            </div>
+        <h4>Render Modes</h4>
+        <div class="btn-grid">
+            <button class="btn-mode active" id="m-final" onclick="updateRender('final')">Lit</button>
+            <button class="btn-mode" id="m-wire" onclick="updateRender('wire')">Wireframe</button>
+            <button class="btn-mode" id="m-clay" onclick="updateRender('clay')">Clay</button>
+            <button class="btn-mode" id="m-uv" onclick="updateRender('uv')">X-Ray</button>
         </div>
 
-        <h4>Iluminación</h4>
+        <h4>Luz y Escena</h4>
         <div class="control-group">
-            <div class="label-row"><span>Intensidad</span> <span id="val-exp">1.0</span></div>
-            <input type="range" min="0" max="2" step="0.1" value="1" oninput="updateExp(this.value)">
+            <div class="label-row"><span>Exposición</span> <span id="v-exp">1.0</span></div>
+            <input type="range" min="0" max="3" step="0.1" value="1" oninput="viewer.exposure = this.value; document.getElementById('v-exp').innerText=this.value">
         </div>
 
         <div class="control-group">
-            <div class="label-row"><span>Ambiente (HDR)</span></div>
-            <select id="env-select" class="btn-mode" style="width:100%" onchange="updateEnv(this.value)">
+            <div class="label-row"><span>HDR Ambiente</span></div>
+            <select class="btn-mode" style="width:100%" onchange="viewer.environmentImage = this.value">
                 <option value="neutral">Estudio Neutro</option>
                 <option value="https://modelviewer.dev/shared-assets/environments/spruit_sunrise_1k_hdr.hdr">Amanecer</option>
-                <option value="https://modelviewer.dev/shared-assets/environments/aircraft_workshop_01_1k.hdr">Taller</option>
-                <option value="https://modelviewer.dev/shared-assets/environments/moonlight_1k.hdr">Noche / Luna</option>
+                <option value="https://modelviewer.dev/shared-assets/environments/aircraft_workshop_01_1k.hdr">Taller Industrial</option>
             </select>
+        </div>
+
+        <h4>Post-Process (Imagen)</h4>
+        <div class="control-group">
+            <div class="label-row"><span>Brillo</span></div>
+            <input type="range" id="p-bright" min="50" max="200" value="100" oninput="applyFilters()">
+        </div>
+        <div class="control-group">
+            <div class="label-row"><span>Contraste</span></div>
+            <input type="range" id="p-contrast" min="50" max="200" value="100" oninput="applyFilters()">
+        </div>
+        <div class="control-group">
+            <div class="label-row"><span>Saturación</span></div>
+            <input type="range" id="p-saturate" min="0" max="200" value="100" oninput="applyFilters()">
         </div>
     </div>
 
     <div class="stats-chip" id="stats">
-        POLYS: CALC... | VERTS: CALC...
+        POLYGONS: -- | VERTS: --
     </div>
 
     <model-viewer id="main-visor" 
@@ -120,99 +112,82 @@
         shadow-intensity="1" 
         environment-image="neutral"
         exposure="1"
-        camera-orbit="45deg 75deg 105%"
         interaction-prompt="none">
-
-        <button class="Hotspot" slot="hotspot-1" data-position="0.2m 0.5m 0.1m" data-normal="0m 1m 0m">
-            <div class="HotspotAnnotation">Detalle Técnico A</div>
-        </button>
-        <button class="Hotspot" slot="hotspot-2" data-position="-0.2m 0.3m 0.2m" data-normal="0m 0m 1m">
-            <div class="HotspotAnnotation">Optimización de Malla</div>
-        </button>
-
     </model-viewer>
 
     <script>
         const viewer = document.querySelector("#main-visor");
-        const statsDisplay = document.querySelector("#stats");
-        let wireframes = [];
-        let backupMaterials = [];
+        let originalMaterials = new Map();
 
+        // 1. CARGAR DESDE DRIVE (URL PARAMS)
         const params = new URLSearchParams(window.location.search);
-        const model = params.get('model');
-        if(model) {
-            viewer.src = `modelos/${model}`;
-            document.querySelector("#model-name").innerText = model.split('.')[0].toUpperCase();
+        const modelUrl = params.get('model');
+        
+        if(modelUrl) {
+            viewer.src = modelUrl;
+            // Extraer un nombre bonito del ID si es posible
+            document.querySelector("#model-name").innerText = "INSPECTING REMOTE MODEL";
         }
 
+        // 2. LOGICA DE MATERIALES Y WIREFRAME
         viewer.addEventListener('load', () => {
-            const scene = viewer.toObject3D(); 
-            
+            const scene = viewer.toObject3D();
             let polys = 0;
             let verts = 0;
-            wireframes = [];
-            backupMaterials = [];
 
             scene.traverse(node => {
                 if (node.isMesh) {
-                    // 1. Stats
+                    // Guardar material original para restaurar
+                    originalMaterials.set(node.uuid, node.material.clone());
+                    
+                    // Contar geometría
                     polys += node.geometry.index ? node.geometry.index.count / 3 : node.geometry.attributes.position.count / 3;
                     verts += node.geometry.attributes.position.count;
 
-                    // 2. Wireframe con Corrección de Z-Fighting (PolygonOffset)
-                    const geo = new THREE.WireframeGeometry(node.geometry);
-                    const mat = new THREE.LineBasicMaterial({ 
-                        color: 0x00d4ff, 
-                        transparent: true, 
-                        opacity: 0.5,
-                        depthTest: true
-                    });
-                    
-                    const wire = new THREE.LineSegments(geo, mat);
-                    
-                    // Empujamos la malla un poco hacia afuera para que no parpadee
-                    wire.position.copy(node.position);
-                    wire.scale.set(1.001, 1.001, 1.001); 
-                    
-                    node.add(wire);
-                    wire.visible = false;
-                    wireframes.push(wire);
-
-                    // 3. Backup para Clay
-                    backupMaterials.push({
-                        mesh: node,
-                        original: node.material.clone()
-                    });
+                    // Crear Wireframe como un hijo para que no falle el material principal
+                    const wireGeo = new THREE.WireframeGeometry(node.geometry);
+                    const wireMat = new THREE.LineBasicMaterial({ color: 0x00d4ff, transparent: true, opacity: 0.4 });
+                    const wireframe = new THREE.LineSegments(wireGeo, wireMat);
+                    wireframe.name = "wireframe_layer";
+                    wireframe.visible = false;
+                    node.add(wireframe);
                 }
             });
 
-            statsDisplay.innerText = `POLYS: ${Math.round(polys).toLocaleString()} | VERTS: ${Math.round(verts).toLocaleString()}`;
+            document.getElementById('stats').innerText = `POLYS: ${Math.round(polys).toLocaleString()} | VERTS: ${Math.round(verts).toLocaleString()}`;
         });
 
-        function setMode(mode) {
+        // 3. CAMBIAR MODOS DE RENDER
+        function updateRender(mode) {
             document.querySelectorAll('.btn-mode').forEach(b => b.classList.remove('active'));
             document.getElementById(`m-${mode}`).classList.add('active');
 
-            wireframes.forEach(w => w.visible = (mode === 'wire'));
-
-            backupMaterials.forEach(entry => {
-                if (mode === 'clay') {
-                    entry.mesh.material = new THREE.MeshStandardMaterial({ color: 0x555555, roughness: 0.5 });
-                } else if (mode === 'uv') {
-                    entry.mesh.material = new THREE.MeshStandardMaterial({ color: 0x00ffaa, wireframe: true });
-                } else {
-                    entry.mesh.material = entry.original;
+            const scene = viewer.toObject3D();
+            scene.traverse(node => {
+                if (node.isMesh) {
+                    const wireLayer = node.children.find(c => c.name === "wireframe_layer");
+                    
+                    // Reset
+                    if (wireLayer) wireLayer.visible = (mode === 'wire');
+                    
+                    if (mode === 'clay') {
+                        node.material = new THREE.MeshStandardMaterial({ color: 0x666666, roughness: 0.8 });
+                    } else if (mode === 'uv') {
+                        node.material = new THREE.MeshStandardMaterial({ color: 0x00d4ff, wireframe: false, opacity: 0.3, transparent: true });
+                    } else {
+                        // Restaurar original
+                        node.material = originalMaterials.get(node.uuid);
+                    }
                 }
             });
         }
 
-        function updateExp(val) {
-            viewer.exposure = val;
-            document.getElementById('val-exp').innerText = val;
-        }
-
-        function updateEnv(val) {
-            viewer.environmentImage = val;
+        // 4. FILTROS DE IMAGEN (BRILLO/CONTRASTE)
+        function applyFilters() {
+            const b = document.getElementById('p-bright').value;
+            const c = document.getElementById('p-contrast').value;
+            const s = document.getElementById('p-saturate').value;
+            viewer.style.filter = `brightness(${b}%) contrast(${c}%) saturate(${s}%)`;
         }
     </script>
 </body>
