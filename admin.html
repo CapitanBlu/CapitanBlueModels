@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>CapitanBlue | Admin Login</title>
+    <style>
+        body { background: #050505; color: white; font-family: sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+        .login-box { background: #111; padding: 40px; border-radius: 15px; border: 1px solid #333; text-align: center; }
+        input { width: 100%; padding: 10px; margin: 10px 0; background: #222; border: 1px solid #444; color: white; border-radius: 5px; }
+        button { background: #0064e0; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; width: 100%; }
+    </style>
+</head>
+<body>
+    <div class="login-box">
+        <h2>Panel de Control</h2>
+        <input type="password" id="pass" placeholder="Contraseña de Administrador">
+        <button onclick="checkPass()">Entrar</button>
+    </div>
+
+    <script>
+        function checkPass() {
+            const p = document.getElementById('pass').value;
+            // Sustituye 'tu_clave_secreta' por lo que quieras
+            if(p === "Capitan2026") {
+                // Te redirige directamente a la subida de archivos de tu GitHub
+                window.location.href = "https://github.com/tu-usuario/CapitanBlueModels/upload/main/modelos";
+            } else {
+                alert("Acceso denegado.");
+            }
+        }
+    </script>
+</body>
+</html>
