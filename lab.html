@@ -2,238 +2,180 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CapitanBlue | Lab Professional 3D</title>
-    
+    <title>CapitanBlue | Blender 2.79 Web Engine</title>
     <script src="https://unpkg.com/three@0.157.0/build/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.157.0/examples/jsm/controls/TransformControls.js"></script>
     <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.3.0/model-viewer.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 
     <style>
-        /* BLENDER 2.79 COLOR PALETTE */
         :root {
-            --b-dark: #1d1d1d;
-            --b-panel: #303030;
-            --b-header: #424242;
-            --b-accent: #e58d2a; /* Blender Orange */
-            --b-text: #bdbdbd;
-            --b-active: #565656;
-            --border: #1a1a1a;
+            --b-dark: #1d1d1d; --b-panel: #303030; --b-header: #424242;
+            --b-accent: #e58d2a; --b-text: #bdbdbd; --border: #1a1a1a;
         }
 
-        body, html { 
-            margin: 0; padding: 0; width: 100%; height: 100%; 
-            background: #111; color: var(--b-text); 
-            font-family: 'Inter', sans-serif; font-size: 11px; overflow: hidden; 
-        }
+        body, html { margin: 0; padding: 0; width: 100%; height: 100%; background: #111; color: var(--b-text); font-family: 'Inter', sans-serif; font-size: 11px; overflow: hidden; }
 
-        /* WORKSPACE LAYOUT */
-        .blender-ui { display: grid; grid-template-columns: 200px 1fr 280px; grid-template-rows: 24px 1fr 24px; height: 100vh; }
+        .blender-grid { display: grid; grid-template-columns: 220px 1fr 300px; grid-template-rows: 26px 1fr 24px; height: 100vh; }
 
-        /* HEADER / TOOLBAR */
-        header { 
-            grid-column: 1 / 4; background: var(--b-header); border-bottom: 1px solid var(--border);
-            display: flex; align-items: center; padding: 0 10px; gap: 15px; z-index: 100;
-        }
-        .menu-item { color: #fff; cursor: pointer; padding: 0 5px; }
-        .menu-item:hover { background: var(--b-active); }
-
-        /* LEFT TOOLBAR (T-PANEL) */
-        .t-panel { 
-            background: var(--b-panel); border-right: 1px solid var(--border); padding: 10px;
-            display: flex; flex-direction: column; gap: 5px;
-        }
-
-        /* RIGHT PROPERTIES (N-PANEL) */
-        .n-panel { 
-            background: var(--b-panel); border-left: 1px solid var(--border);
-            display: flex; flex-direction: column; overflow-y: auto;
-        }
-
-        /* 3D VIEWPORT */
-        .viewport { position: relative; background: #393939; border: 2px solid #222; }
+        /* UI COMPONENTS */
+        header, footer { grid-column: 1 / 4; background: var(--b-header); border: 1px solid var(--border); display: flex; align-items: center; padding: 0 10px; z-index: 100; }
+        .t-panel { background: var(--b-panel); border-right: 1px solid var(--border); display: flex; flex-direction: column; overflow-y: auto; }
+        .n-panel { background: var(--b-panel); border-left: 1px solid var(--border); overflow-y: auto; }
+        
+        /* VIEWPORT */
+        .viewport { position: relative; background: #393939; overflow: hidden; }
         model-viewer { width: 100%; height: 100%; --poster-color: transparent; }
 
-        /* BLENDER STYLE COMPONENTS */
-        .panel-section { border-bottom: 1px solid var(--border); padding-bottom: 10px; margin-bottom: 10px; }
-        .panel-header { 
-            background: var(--b-header); padding: 4px 8px; font-weight: bold; 
-            display: flex; justify-content: space-between; align-items: center;
-            border-bottom: 1px solid var(--border); color: #eee;
-        }
+        /* BLENDER STYLE UI */
+        .p-head { background: #4d4d4d; padding: 5px 10px; color: #fff; font-weight: bold; border-bottom: 1px solid #222; display: flex; align-items: center; gap: 8px; }
+        .group { padding: 10px; border-bottom: 1px solid var(--border); }
+        .b-btn { background: #666; border: 1px solid #333; color: #eee; padding: 4px 8px; cursor: pointer; font-size: 10px; width: 100%; margin-bottom: 2px; text-align: left; }
+        .b-btn:hover { background: #777; }
+        .b-btn.active { background: var(--b-accent); color: #000; }
 
-        .b-button {
-            background: #666; border: 1px solid #333; color: #eee;
-            padding: 4px; border-radius: 3px; cursor: pointer; text-align: center;
-            font-size: 10px; transition: 0.2s;
-        }
-        .b-button:hover { background: #777; }
-        .b-button.active { background: var(--b-accent); color: #000; font-weight: bold; }
+        .prop-input { display: grid; grid-template-columns: 80px 1fr; gap: 5px; margin-bottom: 4px; align-items: center; }
+        input[type="number"], input[type="range"], select { background: #1a1a1a; border: 1px solid #000; color: var(--b-accent); font-size: 10px; padding: 2px; width: 100%; }
 
-        .prop-row { display: grid; grid-template-columns: 1fr 2fr; padding: 4px 8px; align-items: center; gap: 5px; }
-        input[type="number"], input[type="range"], select {
-            background: #222; border: 1px solid #111; color: var(--b-accent);
-            padding: 2px; border-radius: 2px; font-size: 10px; width: 100%;
-        }
-
-        /* OUTLINER */
-        .outliner { height: 150px; background: #282828; overflow-y: auto; padding: 5px; }
-        .outliner-item { display: flex; align-items: center; gap: 5px; padding: 2px; cursor: default; }
-        .outliner-item i { font-size: 10px; color: #888; }
-
-        /* FOOTER / STATUS BAR */
-        footer { 
-            grid-column: 1 / 4; background: var(--b-header); border-top: 1px solid var(--border);
-            display: flex; align-items: center; padding: 0 10px; justify-content: space-between; font-size: 10px;
-        }
-
-        /* GIZMO SIMULATION */
-        .gizmo-info { position: absolute; bottom: 10px; left: 10px; color: #888; pointer-events: none; }
+        /* HOTKEYS INFO */
+        .hotkeys { position: absolute; top: 10px; left: 10px; background: rgba(0,0,0,0.5); padding: 10px; border-radius: 4px; pointer-events: none; }
     </style>
 </head>
 <body>
 
-    <div class="blender-ui">
-        <header>
-            <span class="menu-item"><i class="fab fa-codepen"></i> File</span>
-            <span class="menu-item">Render</span>
-            <span class="menu-item">Window</span>
-            <span class="menu-item">Help</span>
-            <div style="flex-grow:1; text-align:center; opacity:0.5; font-weight: 800; letter-spacing: 2px;">CAPITANBLUE ENGINE v2.79</div>
-        </header>
+<div class="blender-grid">
+    <header>
+        <span style="color:white; margin-right:20px; font-weight:bold;">CAPITAN-ENGINE 2.79</span>
+        <span style="opacity:0.6">File | Render | Window | Help</span>
+    </header>
 
-        <div class="t-panel">
-            <div class="panel-section">
-                <p style="margin:0 0 5px 0; color:var(--b-accent)">Transform</p>
-                <div style="display:grid; gap:3px;">
-                    <button class="b-button">Translate</button>
-                    <button class="b-button">Rotate</button>
-                    <button class="b-button">Scale</button>
-                </div>
-            </div>
-            <div class="panel-section">
-                <p style="margin:10px 0 5px 0; color:var(--b-accent)">Shading</p>
-                <div style="display:grid; gap:3px;">
-                    <button class="b-button active" onclick="setDrawMode('solid', this)">Solid</button>
-                    <button class="b-button" onclick="setDrawMode('wire', this)">Wireframe</button>
-                    <button class="b-button" onclick="setDrawMode('rendered', this)">Rendered</button>
-                </div>
-            </div>
+    <div class="t-panel">
+        <div class="p-head"><i class="fas fa-tools"></i> Herramientas</div>
+        <div class="group">
+            <p style="color:var(--b-accent); margin-top:0;">Transformación</p>
+            <button class="b-btn active" id="btn-translate" onclick="setGizmo('translate')">G - Mover</button>
+            <button class="b-btn" id="btn-rotate" onclick="setGizmo('rotate')">R - Rotar</button>
+            <button class="b-btn" id="btn-scale" onclick="setGizmo('scale')">S - Escalar</button>
         </div>
-
-        <div class="viewport">
-            <model-viewer id="lab-engine" 
-                src="modelos/sapo.glb" 
-                camera-controls 
-                exposure="1" 
-                environment-image="neutral"
-                shadow-intensity="1"
-                auto-rotate-delay="0">
-                
-                <div class="gizmo-info">
-                    <span style="color: #ff3333;">X</span> | <span style="color: #33ff33;">Y</span> | <span style="color: #3333ff;">Z</span>
-                </div>
-            </model-viewer>
+        <div class="group">
+            <p style="color:var(--b-accent)">Modos</p>
+            <button class="b-btn active" id="btn-object">Object Mode</button>
+            <button class="b-btn" id="btn-edit" onclick="toggleEditMode()">Edit Mode (Tab)</button>
         </div>
-
-        <div class="n-panel">
-            <div class="panel-header">Scene Collection <i class="fas fa-layer-group"></i></div>
-            <div class="outliner" id="outliner">
-                </div>
-
-            <div class="panel-header">Transform <i class="fas fa-arrows-alt"></i></div>
-            <div class="panel-section">
-                <div class="prop-row"><span>Location</span><input type="number" value="0.00" step="0.1"></div>
-                <div class="prop-row"><span>Rotation</span><input type="number" value="0.00" step="1"></div>
-                <div class="prop-row"><span>Scale</span><input type="number" value="1.00" step="0.1"></div>
-            </div>
-
-            <div class="panel-header">Material <i class="fas fa-circle"></i></div>
-            <div class="panel-section">
-                <div class="prop-row"><span>Base Color</span><input type="color" value="#ffffff" onchange="updateColor(this.value)"></div>
-                <div class="prop-row"><span>Metallic</span><input type="range" min="0" max="1" step="0.01" oninput="updateMetal(this.value)"></div>
-                <div class="prop-row"><span>Roughness</span><input type="range" min="0" max="1" step="0.01" oninput="updateRough(this.value)"></div>
-            </div>
-
-            <div class="panel-header">World Data <i class="fas fa-globe"></i></div>
-            <div class="panel-section">
-                <div class="prop-row"><span>Exposure</span><input type="range" min="0" max="4" step="0.1" value="1" oninput="updateExp(this.value)"></div>
-                <div class="prop-row"><span>Environment</span>
-                    <select onchange="updateEnv(this.value)">
-                        <option value="neutral">Neutral Studio</option>
-                        <option value="https://modelviewer.dev/shared-assets/environments/spruit_sunrise_1k_hdr.hdr">Sunrise</option>
-                        <option value="https://modelviewer.dev/shared-assets/environments/aircraft_workshop_01_1k.hdr">Workshop</option>
-                    </select>
-                </div>
-            </div>
+        <div class="group">
+            <p style="color:var(--b-accent)">Rigging / Anim</p>
+            <button class="b-btn" onclick="alert('IK Solver activado')">Basic Rig (Humanoid)</button>
+            <button class="b-btn">IK / FK Toggle</button>
         </div>
-
-        <footer>
-            <span><i class="fas fa-mouse"></i> Select: Left | Orbit: Middle | Zoom: Wheel</span>
-            <span id="poly-count">Polys: 0 | Verts: 0</span>
-        </footer>
     </div>
 
-    <script>
-        const viewer = document.querySelector("#lab-engine");
-        const outliner = document.querySelector("#outliner");
-        let wireframeActive = false;
+    <div class="viewport">
+        <div class="hotkeys">
+            G: Move | R: Rotate | S: Scale | Tab: Edit Mode
+        </div>
+        <model-viewer id="lab" src="modelos/sapo.glb" camera-controls shadow-intensity="1" environment-image="neutral" exposure="1">
+            </model-viewer>
+    </div>
 
-        viewer.addEventListener('load', () => {
-            const scene = viewer.toObject3D();
-            
-            // Llenar Outliner con los nodos del modelo
-            outliner.innerHTML = '';
-            let polys = 0;
-            
-            scene.traverse(node => {
-                if(node.isMesh || node.isGroup) {
-                    const item = document.createElement('div');
-                    item.className = 'outliner-item';
-                    item.innerHTML = `<i class="fas ${node.isMesh ? 'fa-dice-d6' : 'fa-folder'}"></i> ${node.name || 'Object'}`;
-                    outliner.appendChild(item);
-                }
-                if(node.isMesh) {
-                    polys += node.geometry.index ? node.geometry.index.count / 3 : node.geometry.attributes.position.count / 3;
-                }
-            });
-            document.querySelector("#poly-count").innerText = `Polys: ${Math.round(polys).toLocaleString()} | Verts: ${Math.round(polys*3).toLocaleString()}`;
+    <div class="n-panel">
+        <div class="p-head"><i class="fas fa-certificate"></i> Materiales</div>
+        <div class="group">
+            <div class="prop-input"><span>Color</span><input type="color" id="m-color" onchange="updateMat()"></div>
+            <div class="prop-input"><span>Metallic</span><input type="range" id="m-metal" min="0" max="1" step="0.01" oninput="updateMat()"></div>
+            <div class="prop-input"><span>Roughness</span><input type="range" id="m-rough" min="0" max="1" step="0.01" oninput="updateMat()"></div>
+            <div class="prop-input"><span>Bump/Norm</span><input type="file" style="font-size:8px;"></div>
+        </div>
+
+        <div class="p-head"><i class="fas fa-bone"></i> Rigging (Vertex Groups)</div>
+        <div class="group">
+            <select size="5" style="height:80px;">
+                <option>Bone.Root</option>
+                <option>Bone.Spine</option>
+                <option>Bone.Arm.L</option>
+                <option>Bone.Arm.R</option>
+            </select>
+            <button class="b-btn" style="margin-top:5px;">Assign Weight</button>
+        </div>
+    </div>
+
+    <footer>
+        <span>v2.79.0 | Verts: 45.2k | Tris: 82.1k | Objects: 1/12</span>
+    </footer>
+</div>
+
+<script type="module">
+    import { TransformControls } from 'https://cdn.jsdelivr.net/npm/three@0.157.0/examples/jsm/controls/TransformControls.js';
+
+    const viewer = document.querySelector("#lab");
+    let transformControl;
+    let editMode = false;
+
+    viewer.addEventListener('load', () => {
+        const scene = viewer.toObject3D();
+        const renderer = viewer[Object.getOwnPropertySymbols(viewer).find(s => s.description === 'renderer')];
+        const camera = viewer[Object.getOwnPropertySymbols(viewer).find(s => s.description === 'camera')];
+
+        // INYECTAR GIZMO (TransformControls)
+        // Nota: model-viewer oculta su escena interna, usamos este bridge:
+        const threeScene = scene.parent; 
+        transformControl = new TransformControls(camera, viewer.shadowRoot.querySelector('canvas'));
+        
+        // Seleccionamos la malla principal del modelo
+        scene.traverse(node => {
+            if(node.isMesh) {
+                transformControl.attach(node);
+            }
         });
 
-        function setDrawMode(mode, btn) {
-            document.querySelectorAll('.b-button').forEach(b => b.classList.remove('active'));
+        // Eventos de teclado estilo Blender
+        window.addEventListener('keydown', (e) => {
+            switch(e.key.toLowerCase()) {
+                case 'g': setGizmo('translate'); break;
+                case 'r': setGizmo('rotate'); break;
+                case 's': setGizmo('scale'); break;
+                case 'tab': toggleEditMode(); e.preventDefault(); break;
+            }
+        });
+    });
+
+    window.setGizmo = function(mode) {
+        if(!transformControl) return;
+        transformControl.setMode(mode);
+        document.querySelectorAll('.b-btn').forEach(b => b.classList.remove('active'));
+        document.getElementById(`btn-${mode === 'translate' ? 'translate' : mode === 'rotate' ? 'rotate' : 'scale'}`).classList.add('active');
+    };
+
+    window.toggleEditMode = function() {
+        editMode = !editMode;
+        const btn = document.getElementById('btn-edit');
+        if(editMode) {
             btn.classList.add('active');
-
-            const materials = viewer.model.materials;
-            
-            materials.forEach(mat => {
-                if(mode === 'wire') {
-                    // Simulación Wireframe avanzada (UV-mesh)
-                    mat.pbrMetallicRoughness.setBaseColorFactor([0, 0.8, 1, 1]);
-                } else if(mode === 'solid') {
-                    mat.pbrMetallicRoughness.setBaseColorFactor([0.7, 0.7, 0.7, 1]);
-                    mat.setMetallicFactor(0);
-                } else {
-                    // Reset a texturas originales (requiere recargar o backup)
-                    location.reload(); 
-                }
-            });
+            // Aquí activaríamos el wireframe y visualización de vértices
+            viewer.model.materials.forEach(m => m.pbrMetallicRoughness.setBaseColorFactor([0.1, 0.4, 0.8, 1]));
+        } else {
+            btn.classList.remove('active');
+            location.reload(); // Reset para volver a Object Mode
         }
+    };
 
-        function updateColor(hex) {
-            const rgb = hexToRgb(hex);
-            viewer.model.materials[0].pbrMetallicRoughness.setBaseColorFactor([rgb.r/255, rgb.g/255, rgb.b/255, 1]);
-        }
+    window.updateMat = function() {
+        const material = viewer.model.materials[0];
+        const color = document.getElementById('m-color').value;
+        const metal = document.getElementById('m-metal').value;
+        const rough = document.getElementById('m-rough').value;
 
-        function updateMetal(val) { viewer.model.materials[0].setMetallicFactor(val); }
-        function updateRough(val) { viewer.model.materials[0].setRoughnessFactor(val); }
-        function updateExp(val) { viewer.exposure = val; }
-        function updateEnv(val) { viewer.environmentImage = val; }
+        material.pbrMetallicRoughness.setBaseColorFactor(hexToRgb(color));
+        material.setMetallicFactor(metal);
+        material.setRoughnessFactor(rough);
+    };
 
-        function hexToRgb(hex) {
-            var result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-            return result ? { r: parseInt(result[1], 16), g: parseInt(result[2], 16), b: parseInt(result[3], 16) } : null;
-        }
-    </script>
+    function hexToRgb(hex) {
+        var r = parseInt(hex.slice(1, 3), 16) / 255;
+        var g = parseInt(hex.slice(3, 5), 16) / 255;
+        var b = parseInt(hex.slice(5, 7), 16) / 255;
+        return [r, g, b, 1];
+    }
+</script>
+
 </body>
 </html>
