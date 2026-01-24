@@ -107,14 +107,20 @@
         const viewer = document.querySelector("#main-visor");
         let originalMaterials = new Map();
 
-        // 1. CARGA LOCAL SEGURA
+        // 1. CARGA LOCAL SEGURA DESDE LA CARPETA 'MODELOS'
         const params = new URLSearchParams(window.location.search);
-        const modelUrl = params.get('model');
+        const modelParam = params.get('model');
         
-        if(modelUrl) {
-            const cleanUrl = decodeURIComponent(modelUrl);
-            viewer.src = cleanUrl;
-            document.querySelector("#model-name").innerText = "LOADING: " + cleanUrl.toUpperCase();
+        if(modelParam) {
+            // Decodificamos el nombre del archivo
+            const fileName = decodeURIComponent(modelParam);
+            
+            // Si el index.html envía solo 'sapo.glb', aquí le ponemos la ruta completa
+            // Si el index ya envía 'modelos/sapo.glb', esto lo detecta automáticamente
+            const finalPath = fileName.startsWith('modelos/') ? fileName : `modelos/${fileName}`;
+            
+            viewer.src = finalPath;
+            document.querySelector("#model-name").innerText = "LOADING: " + fileName.toUpperCase();
         }
 
         // 2. ANALISIS DE MALLA Y PREPARACIÓN DE MODOS
@@ -126,14 +132,11 @@
 
             scene.traverse(node => {
                 if (node.isMesh) {
-                    // Guardamos una COPIA del material para que no se pierda al cambiar de modo
                     originalMaterials.set(node.uuid, node.material.clone());
                     
-                    // Conteo de geometría para el chip de abajo
                     polys += node.geometry.index ? node.geometry.index.count / 3 : node.geometry.attributes.position.count / 3;
                     verts += node.geometry.attributes.position.count;
 
-                    // Crear el Wireframe (azul neón) como capa secundaria
                     const wireGeo = new THREE.WireframeGeometry(node.geometry);
                     const wireMat = new THREE.LineBasicMaterial({ color: 0x00d4ff, transparent: true, opacity: 0.3 });
                     const wireframe = new THREE.LineSegments(wireGeo, wireMat);
@@ -155,8 +158,6 @@
             scene.traverse(node => {
                 if (node.isMesh) {
                     const wireLayer = node.children.find(c => c.name === "wireframe_layer");
-                    
-                    // Solo mostramos wireframe en su modo específico
                     if (wireLayer) wireLayer.visible = (mode === 'wire');
                     
                     if (mode === 'clay') {
@@ -164,14 +165,13 @@
                     } else if (mode === 'uv') {
                         node.material = new THREE.MeshStandardMaterial({ color: 0x00d4ff, transparent: true, opacity: 0.2 });
                     } else {
-                        // Restauramos el material con texturas original
                         node.material = originalMaterials.get(node.uuid);
                     }
                 }
             });
         }
 
-        // 4. FILTROS CSS (Post-procesado)
+        // 4. FILTROS CSS
         function applyFilters() {
             const b = document.getElementById('p-bright').value;
             const c = document.getElementById('p-contrast').value;
