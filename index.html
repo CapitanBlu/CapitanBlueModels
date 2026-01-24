@@ -104,7 +104,7 @@
                 </div>
                 <div class="card-info">
                     <h3>Rana Tropical (Local)</h3>
-                    <p>Cargado directamente desde el repositorio. Sin errores de CORS.</p>
+                    <p>Asset optimizado cargado desde la carpeta de modelos interna.</p>
                     <a onclick="launchVisor('sapo.glb')" class="btn-view">
                         <i class="fas fa-cube"></i> EXPLORAR ASSET
                     </a>
@@ -115,10 +115,19 @@
     </section>
 
     <script>
-        function launchVisor(modelPath) {
-            if(!modelPath) return;
-            // Al pasar solo 'sapo.glb', el visor lo buscará en tu propia carpeta de GitHub
-            window.location.href = `visor.html?model=${encodeURIComponent(modelPath)}`;
+        /**
+         * Función para lanzar el visor
+         * @param {string} fileName - Nombre del archivo (ej. 'sapo.glb')
+         */
+        function launchVisor(fileName) {
+            if(!fileName) return;
+            
+            // Construimos la ruta hacia la carpeta 'models'
+            // Según tus notas, la carpeta es 'models'
+            const filePath = 'modelos/' + fileName;
+            
+            // Redirigimos al visor pasando la ruta completa
+            window.location.href = `visor.html?model=${encodeURIComponent(filePath)}`;
         }
     </script>
 
