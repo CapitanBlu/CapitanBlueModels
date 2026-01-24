@@ -3,209 +3,220 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Visualizador Pro | CapitanBlue</title>
+    <title>Inspector 3D Pro | CapitanBlue</title>
     
     <script src="https://unpkg.com/three@0.157.0/build/three.min.js"></script>
     <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.3.0/model-viewer.min.js"></script>
 
     <style>
         :root {
-            --accent: #00d4ff; /* Color cián para destacar */
-            --glass-bg: rgba(20, 20, 35, 0.85);
-            --studio-gradient: radial-gradient(circle at 50% 30%, #2a2a4a 0%, #0a0a12 100%);
+            --accent: #00d4ff;
+            --panel-bg: rgba(10, 10, 15, 0.9);
+            --glass: rgba(255, 255, 255, 0.05);
+            --grad: radial-gradient(circle at 50% 40%, #1a1a2e 0%, #050508 100%);
         }
 
-        body, html { 
-            margin: 0; padding: 0; width: 100%; height: 100%; 
-            background: var(--studio-gradient); /* Nuevo fondo con vida */
-            color: white; font-family: 'Inter', sans-serif; overflow: hidden; 
+        body, html { margin: 0; padding: 0; width: 100%; height: 100%; background: var(--grad); color: white; font-family: 'Inter', sans-serif; overflow: hidden; }
+
+        model-viewer { width: 100%; height: 100vh; --poster-color: transparent; }
+
+        /* HEADER */
+        .header { position: absolute; top: 0; width: 100%; padding: 20px 30px; display: flex; justify-content: space-between; align-items: center; z-index: 100; box-sizing: border-box; pointer-events: none; }
+        .header * { pointer-events: auto; }
+        .back-link { text-decoration: none; color: #888; font-size: 0.8rem; letter-spacing: 1px; transition: 0.3s; }
+        .back-link:hover { color: var(--accent); }
+
+        /* PANEL LATERAL (Inspector) */
+        .inspector {
+            position: absolute; right: 20px; top: 80px; width: 260px;
+            background: var(--panel-bg); border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 15px; padding: 20px; backdrop-filter: blur(20px);
+            z-index: 100; transform: translateX(300px); transition: 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        .inspector.open { transform: translateX(0); }
+
+        .inspector h4 { margin: 0 0 15px 0; font-size: 0.75rem; color: var(--accent); text-transform: uppercase; letter-spacing: 2px; }
+        
+        .control-group { margin-bottom: 20px; }
+        .label-row { display: flex; justify-content: space-between; font-size: 0.7rem; margin-bottom: 8px; color: #ccc; }
+        
+        input[type="range"] { width: 100%; accent-color: var(--accent); cursor: pointer; }
+
+        /* BOTONES DE MODO */
+        .mode-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+        .btn-mode { 
+            background: var(--glass); border: 1px solid rgba(255,255,255,0.1); 
+            color: white; padding: 8px; border-radius: 6px; font-size: 0.65rem; 
+            cursor: pointer; transition: 0.3s;
+        }
+        .btn-mode.active { background: var(--accent); color: black; border-color: var(--accent); font-weight: bold; }
+
+        /* STATS CHIP */
+        .stats-chip {
+            position: absolute; bottom: 30px; left: 30px;
+            background: rgba(0,0,0,0.6); padding: 8px 15px; border-radius: 8px;
+            font-size: 10px; font-family: monospace; color: #00ffaa;
+            border-left: 3px solid #00ffaa;
         }
 
-        model-viewer {
-            width: 100%;
-            height: 100vh;
-            --poster-color: transparent;
+        /* TOGGLE INSPECTOR */
+        .toggle-insp {
+            position: absolute; right: 20px; top: 20px;
+            background: var(--accent); color: black; border: none;
+            width: 40px; height: 40px; border-radius: 10px; cursor: pointer; z-index: 110;
         }
-
-        /* UI Superior */
-        .top-ui { position: absolute; top: 25px; left: 25px; z-index: 100; display: flex; align-items: center; gap: 20px; }
-        .back-btn {
-            text-decoration: none; color: white; background: var(--glass-bg);
-            padding: 12px 20px; border-radius: 12px; backdrop-filter: blur(10px);
-            border: 1px solid rgba(255,255,255,0.1); font-size: 0.9rem; transition: 0.3s;
-            display: flex; align-items: center; gap: 8px; font-weight: 600;
-        }
-        .back-btn:hover { background: var(--accent); color: black; border-color: var(--accent); }
-        #model-name { font-size: 1.2rem; font-weight: 800; letter-spacing: 1px; text-transform: uppercase; color: var(--accent); text-shadow: 0 0 10px rgba(0, 212, 255, 0.3); }
-
-        /* Panel de Controles */
-        .bottom-controls {
-            position: absolute; bottom: 40px; left: 50%; transform: translateX(-50%);
-            background: var(--glass-bg); padding: 10px 20px; border-radius: 100px;
-            display: flex; gap: 15px; backdrop-filter: blur(20px);
-            border: 1px solid rgba(255,255,255,0.1); box-shadow: 0 20px 40px rgba(0,0,0,0.4);
-            z-index: 100;
-        }
-
-        .control-btn {
-            background: transparent; border: none; color: #ccc;
-            display: flex; flex-direction: column; align-items: center;
-            cursor: pointer; transition: 0.3s; padding: 10px; min-width: 60px;
-            border-radius: 8px;
-        }
-
-        .control-btn:hover { color: white; background: rgba(255,255,255,0.1); }
-        .control-btn.active { color: var(--accent); }
-        .control-btn svg { width: 24px; height: 24px; margin-bottom: 6px; }
-        .control-btn span { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
-
-        /* Botón de animación oculto por defecto */
-        #anim-btn { display: none; }
-
-        /* Barra de carga */
-        .progress-bar { display: block; width: 33%; height: 4px; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: rgba(255,255,255,0.1); border-radius: 10px; overflow: hidden; }
-        .update-bar { background: var(--accent); width: 0%; height: 100%; transition: width 0.3s; }
-        model-viewer.finished-loading .progress-bar { display: none; }
     </style>
 </head>
 <body>
 
-    <div class="top-ui">
-        <a href="index.html" class="back-btn">
-            <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M15 19l-7-7 7-7"></path></svg>
-            PORTAFOLIO
-        </a>
-        <h2 id="model-name">Cargando...</h2>
+    <div class="header">
+        <a href="index.html" class="back-link">← VOLVER AL REPOSITORIO</a>
+        <h2 id="model-name" style="margin:0; font-size: 1rem; font-weight: 300;">CARGANDO ASSET...</h2>
+    </div>
+
+    <button class="toggle-insp" onclick="document.querySelector('.inspector').classList.toggle('open')">⚙️</button>
+
+    <div class="inspector open">
+        <h4>Visualización</h4>
+        <div class="control-group">
+            <div class="label-row"><span>Modo de Render</span></div>
+            <div class="mode-grid">
+                <button class="btn-mode active" id="m-final" onclick="setMode('final')">Final</button>
+                <button class="btn-mode" id="m-wire" onclick="setMode('wire')">Wireframe</button>
+                <button class="btn-mode" id="m-clay" onclick="setMode('clay')">Clay</button>
+                <button class="btn-mode" id="m-uv" onclick="setMode('uv')">UV Check</button>
+            </div>
+        </div>
+
+        <h4>Iluminación</h4>
+        <div class="control-group">
+            <div class="label-row"><span>Exposición</span> <span id="val-exp">1.0</span></div>
+            <input type="range" min="0" max="3" step="0.1" value="1" oninput="updateExp(this.value)">
+        </div>
+
+        <div class="control-group">
+            <div class="label-row"><span>Rotación Luz</span></div>
+            <input type="range" min="0" max="360" value="0" oninput="updateLight(this.value)">
+        </div>
+
+        <div id="anim-section" style="display:none">
+            <h4>Animación</h4>
+            <button class="btn-mode" style="width:100%" onclick="toggleAnim()" id="play-pause">PAUSE</button>
+        </div>
+    </div>
+
+    <div class="stats-chip" id="stats">
+        POLYS: -- | VERTS: --
     </div>
 
     <model-viewer id="main-visor" 
         src="" 
         camera-controls 
-        auto-rotate 
-        shadow-intensity="1.5" 
-        shadow-softness="1"
-        exposure="1.2"
+        auto-rotate
+        shadow-intensity="1" 
         environment-image="neutral"
-        tone-mapping="aces-filmic"
-        loading="eager">
-        
-        <div class="progress-bar" slot="progress-bar"><div class="update-bar"></div></div>
-
-        <div class="bottom-controls">
-            <button class="control-btn active" id="rotate-btn" onclick="toggleAutoRotate()">
-                <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
-                <span>Girar</span>
-            </button>
-
-            <button class="control-btn" id="wireframe-btn" onclick="toggleWireframe()">
-                <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path></svg>
-                <span>Malla</span>
-            </button>
-
-            <button class="control-btn" id="anim-btn" onclick="toggleAnimation()">
-                <svg id="play-icon" fill="currentColor" viewBox="0 0 24 24" style="display:block"><path d="M8 5v14l11-7z"/></svg>
-                <svg id="pause-icon" fill="currentColor" viewBox="0 0 24 24" style="display:none"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
-                <span>Animación</span>
-            </button>
-
-            <button class="control-btn" onclick="resetView()">
-                <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 12a9 9 0 109-9 9.75 9.75 0 00-6.74 2.74L3 8"></path><path d="M3 3v5h5"></path></svg>
-                <span>Reset</span>
-            </button>
-        </div>
+        exposure="1"
+        interpolation-decay="200"
+        interaction-prompt="none">
     </model-viewer>
 
     <script>
         const viewer = document.querySelector("#main-visor");
-        const titleDisplay = document.querySelector("#model-name");
-        const animBtn = document.querySelector("#anim-btn");
-        const rotateBtn = document.querySelector("#rotate-btn");
-        let wireframeMode = false;
-        let isPlaying = false;
+        const statsDisplay = document.querySelector("#stats");
+        let wireframes = [];
+        let originalMaterials = new Map();
 
-        // 1. CARGA DEL MODELO
+        // Cargar Modelo
         const params = new URLSearchParams(window.location.search);
-        const modelFile = params.get('model');
-        if(modelFile) {
-            viewer.src = `modelos/${modelFile}`;
-            titleDisplay.innerText = modelFile.replace('.glb', '').replace(/[_-]/g, ' ');
+        const model = params.get('model');
+        if(model) {
+            viewer.src = `modelos/${model}`;
+            document.querySelector("#model-name").innerText = model.toUpperCase();
         }
 
-        // 2. DETECTAR ANIMACIONES AL CARGAR
         viewer.addEventListener('load', () => {
-            // Comprobar si existen animaciones
-            if (viewer.availableAnimations && viewer.availableAnimations.length > 0) {
-                animBtn.style.display = 'flex'; // Mostrar el botón
-                viewer.animationName = viewer.availableAnimations[0]; // Preparar la primera
+            calculateStats();
+            setupWireframe();
+            
+            // Check Animaciones
+            if (viewer.availableAnimations.length > 0) {
+                document.getElementById('anim-section').style.display = 'block';
+                viewer.play();
             }
-            // Preparar el wireframe real
-            setupRealWireframe();
         });
 
-        // 3. FUNCIONES DE CONTROL
-
-        function toggleAutoRotate() {
-            viewer.autoRotate = !viewer.autoRotate;
-            rotateBtn.classList.toggle('active');
-        }
-
-        function toggleAnimation() {
-            isPlaying = !isPlaying;
-            animBtn.classList.toggle('active');
-            const playIcon = animBtn.querySelector("#play-icon");
-            const pauseIcon = animBtn.querySelector("#pause-icon");
-
-            if (isPlaying) {
-                viewer.play();
-                playIcon.style.display = 'none';
-                pauseIcon.style.display = 'block';
-            } else {
-                viewer.pause();
-                playIcon.style.display = 'block';
-                pauseIcon.style.display = 'none';
-            }
-        }
-
-        function resetView() {
-            viewer.cameraOrbit = "0deg 75deg 105%";
-            viewer.fieldOfView = "auto";
-        }
-
-        // 4. LÓGICA AVANZADA DE WIREFRAME (Three.js)
-        let wireframeObjects = [];
-
-        function setupRealWireframe() {
-            // Accedemos a la escena interna de Three.js del visor
+        function calculateStats() {
+            let polys = 0;
+            let verts = 0;
             const scene = viewer.model[Object.getOwnPropertySymbols(viewer.model)[0]];
-            wireframeObjects = [];
-
-            scene.traverse((node) => {
+            
+            scene.traverse(node => {
                 if (node.isMesh) {
-                    // Creamos la geometría de líneas basada en la malla original
-                    const wireframeGeometry = new THREE.WireframeGeometry(node.geometry);
-                    // Material cián brillante para las líneas
-                    const wireframeMaterial = new THREE.LineBasicMaterial({ color: 0x00d4ff, linewidth: 1 });
-                    const wireframe = new THREE.LineSegments(wireframeGeometry, wireframeMaterial);
-                    
-                    node.add(wireframe); // Añadimos el wireframe como hijo del objeto
-                    wireframe.visible = false; // Oculto por defecto
-                    wireframeObjects.push(wireframe);
+                    polys += node.geometry.index ? node.geometry.index.count / 3 : node.geometry.attributes.position.count / 3;
+                    verts += node.geometry.attributes.position.count;
+                }
+            });
+            statsDisplay.innerText = `POLYS: ${Math.round(polys).toLocaleString()} | VERTS: ${Math.round(verts).toLocaleString()}`;
+        }
+
+        function setupWireframe() {
+            const scene = viewer.model[Object.getOwnPropertySymbols(viewer.model)[0]];
+            wireframes = [];
+            scene.traverse(node => {
+                if (node.isMesh) {
+                    const geo = new THREE.WireframeGeometry(node.geometry);
+                    const mat = new THREE.LineBasicMaterial({ color: 0x00d4ff, transparent: true, opacity: 0.5 });
+                    const wire = new THREE.LineSegments(geo, mat);
+                    node.add(wire);
+                    wire.visible = false;
+                    wireframes.push(wire);
                 }
             });
         }
 
-        function toggleWireframe() {
-            wireframeMode = !wireframeMode;
-            document.querySelector("#wireframe-btn").classList.toggle('active');
-            // Alternar visibilidad de todas las mallas de líneas creadas
-            wireframeObjects.forEach(w => w.visible = wireframeMode);
+        function setMode(mode) {
+            // Reset botones
+            document.querySelectorAll('.btn-mode').forEach(b => b.classList.remove('active'));
+            document.getElementById(`m-${mode === 'final' ? 'final' : mode === 'wire' ? 'wire' : mode === 'clay' ? 'clay' : 'uv'}`).classList.add('active');
+
+            const materials = viewer.model.materials;
+            
+            wireframes.forEach(w => w.visible = (mode === 'wire'));
+
+            materials.forEach((mat, idx) => {
+                if (!originalMaterials.has(idx)) originalMaterials.set(idx, mat.pbrMetallicRoughness.baseColorFactor);
+                
+                if (mode === 'clay') {
+                    mat.pbrMetallicRoughness.setBaseColorFactor([0.7, 0.7, 0.7, 1]);
+                    mat.setMetallicFactor(0);
+                } else if (mode === 'uv') {
+                    mat.pbrMetallicRoughness.setBaseColorFactor([0, 1, 1, 1]);
+                } else {
+                    mat.pbrMetallicRoughness.setBaseColorFactor(originalMaterials.get(idx));
+                    mat.setMetallicFactor(1);
+                }
+            });
         }
 
-        // Barra de progreso
-        viewer.addEventListener('progress', (e) => {
-            document.querySelector('.update-bar').style.width = `${e.detail.totalProgress * 100}%`;
-            if (e.detail.totalProgress === 1) viewer.classList.add('finished-loading');
-        });
+        function updateExp(val) {
+            viewer.exposure = val;
+            document.getElementById('val-exp').innerText = val;
+        }
+
+        function updateLight(val) {
+            viewer.setAttribute('rotation', `0deg 0deg ${val}deg`);
+        }
+
+        function toggleAnim() {
+            const btn = document.getElementById('play-pause');
+            if (btn.innerText === "PAUSE") {
+                viewer.pause();
+                btn.innerText = "PLAY";
+            } else {
+                viewer.play();
+                btn.innerText = "PAUSE";
+            }
+        }
     </script>
 </body>
 </html>
