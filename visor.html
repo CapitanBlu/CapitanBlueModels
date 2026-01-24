@@ -57,7 +57,7 @@
 
     <div class="header">
         <a href="index.html" class="back-link">← PORTAFOLIO</a>
-        <div id="model-name" style="font-weight: 800; letter-spacing: 1px; color: var(--accent); font-size: 0.7rem;">HQ RENDER ENGINE</div>
+        <div id="model-name" style="font-weight: 800; letter-spacing: 1px; color: var(--accent); font-size: 0.7rem;">READY</div>
     </div>
 
     <div class="inspector">
@@ -99,6 +99,7 @@
         shadow-intensity="1" 
         environment-image="neutral"
         exposure="1"
+        loading="eager"
         interaction-prompt="none">
     </model-viewer>
 
@@ -106,34 +107,33 @@
         const viewer = document.querySelector("#main-visor");
         let originalMaterials = new Map();
 
-        // 1. CARGAR DESDE LA URL (Compatible con GitHub Releases y enlaces largos)
+        // 1. CARGA LOCAL SEGURA
         const params = new URLSearchParams(window.location.search);
         const modelUrl = params.get('model');
         
         if(modelUrl) {
-            // Decodificamos la URL para asegurar que GitHub Releases funcione
             const cleanUrl = decodeURIComponent(modelUrl);
             viewer.src = cleanUrl;
-            document.querySelector("#model-name").innerText = "LOADING HQ ASSET...";
+            document.querySelector("#model-name").innerText = "LOADING: " + cleanUrl.toUpperCase();
         }
 
-        // 2. LOGICA DE MATERIALES Y WIREFRAME
+        // 2. ANALISIS DE MALLA Y PREPARACIÓN DE MODOS
         viewer.addEventListener('load', () => {
-            document.querySelector("#model-name").innerText = "INSPECTOR MODE ACTIVE";
+            document.querySelector("#model-name").innerText = "INSPECTOR ACTIVE";
             const scene = viewer.toObject3D();
             let polys = 0;
             let verts = 0;
 
             scene.traverse(node => {
                 if (node.isMesh) {
-                    // Backup robusto del material
-                    originalMaterials.set(node.uuid, node.material);
+                    // Guardamos una COPIA del material para que no se pierda al cambiar de modo
+                    originalMaterials.set(node.uuid, node.material.clone());
                     
-                    // Stats
+                    // Conteo de geometría para el chip de abajo
                     polys += node.geometry.index ? node.geometry.index.count / 3 : node.geometry.attributes.position.count / 3;
                     verts += node.geometry.attributes.position.count;
 
-                    // Capa Wireframe independiente
+                    // Crear el Wireframe (azul neón) como capa secundaria
                     const wireGeo = new THREE.WireframeGeometry(node.geometry);
                     const wireMat = new THREE.LineBasicMaterial({ color: 0x00d4ff, transparent: true, opacity: 0.3 });
                     const wireframe = new THREE.LineSegments(wireGeo, wireMat);
@@ -146,7 +146,7 @@
             document.getElementById('stats').innerText = `POLYS: ${Math.round(polys).toLocaleString()} | VERTS: ${Math.round(verts).toLocaleString()}`;
         });
 
-        // 3. CAMBIAR MODOS DE RENDER (Corregido para materiales externos)
+        // 3. SWITCH DE RENDERIZADO
         function updateRender(mode) {
             document.querySelectorAll('.btn-mode').forEach(b => b.classList.remove('active'));
             document.getElementById(`m-${mode}`).classList.add('active');
@@ -155,6 +155,8 @@
             scene.traverse(node => {
                 if (node.isMesh) {
                     const wireLayer = node.children.find(c => c.name === "wireframe_layer");
+                    
+                    // Solo mostramos wireframe en su modo específico
                     if (wireLayer) wireLayer.visible = (mode === 'wire');
                     
                     if (mode === 'clay') {
@@ -162,14 +164,14 @@
                     } else if (mode === 'uv') {
                         node.material = new THREE.MeshStandardMaterial({ color: 0x00d4ff, transparent: true, opacity: 0.2 });
                     } else {
-                        // Restaurar exactamente el material original
+                        // Restauramos el material con texturas original
                         node.material = originalMaterials.get(node.uuid);
                     }
                 }
             });
         }
 
-        // 4. FILTROS DE IMAGEN
+        // 4. FILTROS CSS (Post-procesado)
         function applyFilters() {
             const b = document.getElementById('p-bright').value;
             const c = document.getElementById('p-contrast').value;
