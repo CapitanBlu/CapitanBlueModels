@@ -1,183 +1,89 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Inspector Pro | CapitanBlue</title>
+<script>
+    const viewer = document.querySelector("#main-visor");
+    let originalMaterials = new Map();
+
+    // --- CONFIGURACIÓN DE TU REPOSITORIO ---
+    const GITHUB_USER = "TU_USUARIO"; // Pon aquí tu nombre de usuario de GitHub
+    const GITHUB_REPO = "TU_REPOSITORIO"; // Pon aquí el nombre de tu proyecto
+
+    // 1. CARGA INTELIGENTE (LOCAL O LFS)
+    const params = new URLSearchParams(window.location.search);
+    const modelParam = params.get('model');
     
-    <script src="https://unpkg.com/three@0.157.0/build/three.min.js"></script>
-    <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.3.0/model-viewer.min.js"></script>
-
-    <style>
-        :root {
-            --accent: #00d4ff;
-            --bg: #050508;
-            --panel: rgba(20, 20, 25, 0.95);
-        }
-
-        body, html { margin: 0; padding: 0; width: 100%; height: 100%; background: var(--bg); color: white; font-family: 'Inter', sans-serif; overflow: hidden; }
-
-        model-viewer { 
-            width: 100%; height: 100vh; 
-            background: radial-gradient(circle at 50% 40%, #1a1a2e 0%, #050508 100%);
-            transition: filter 0.3s ease; 
-        }
-
-        .header { position: absolute; top: 0; width: 100%; padding: 20px; display: flex; justify-content: space-between; align-items: center; z-index: 100; box-sizing: border-box; pointer-events: none; }
-        .back-link { pointer-events: auto; text-decoration: none; color: white; background: rgba(255,255,255,0.1); padding: 10px 20px; border-radius: 8px; font-size: 0.8rem; border: 1px solid rgba(255,255,255,0.2); backdrop-filter: blur(10px); }
-
-        .inspector {
-            position: absolute; right: 20px; top: 80px; width: 260px;
-            background: var(--panel); border: 1px solid rgba(255,255,255,0.1);
-            border-radius: 15px; padding: 20px; backdrop-filter: blur(20px);
-            z-index: 100; max-height: 85vh; overflow-y: auto;
-        }
-
-        h4 { font-size: 0.65rem; color: var(--accent); text-transform: uppercase; letter-spacing: 2px; margin: 20px 0 10px 0; border-bottom: 1px solid #333; padding-bottom: 5px; }
-        .control-group { margin-bottom: 15px; }
-        .label-row { display: flex; justify-content: space-between; font-size: 0.75rem; margin-bottom: 5px; color: #ccc; }
+    if(modelParam) {
+        let fileName = decodeURIComponent(modelParam);
         
-        .btn-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; }
-        .btn-mode { 
-            background: #111; border: 1px solid #333; color: #777; padding: 8px; 
-            border-radius: 6px; font-size: 0.7rem; cursor: pointer; transition: 0.2s; font-weight: bold;
-        }
-        .btn-mode.active { background: var(--accent); color: black; border-color: var(--accent); }
-
-        input[type="range"] { width: 100%; accent-color: var(--accent); cursor: pointer; height: 4px; }
-
-        .stats-chip {
-            position: absolute; bottom: 20px; left: 20px;
-            background: rgba(0,0,0,0.8); padding: 12px; border-radius: 8px;
-            font-size: 10px; font-family: monospace; color: var(--accent); border: 1px solid rgba(0,212,255,0.3);
-        }
-    </style>
-</head>
-<body>
-
-    <div class="header">
-        <a href="index.html" class="back-link">← PORTAFOLIO</a>
-        <div id="model-name" style="font-weight: 800; letter-spacing: 1px; color: var(--accent); font-size: 0.7rem;">READY</div>
-    </div>
-
-    <div class="inspector">
-        <h4>Render Modes</h4>
-        <div class="btn-grid">
-            <button class="btn-mode active" id="m-final" onclick="updateRender('final')">Lit</button>
-            <button class="btn-mode" id="m-wire" onclick="updateRender('wire')">Wireframe</button>
-            <button class="btn-mode" id="m-clay" onclick="updateRender('clay')">Clay</button>
-            <button class="btn-mode" id="m-uv" onclick="updateRender('uv')">X-Ray</button>
-        </div>
-
-        <h4>Luz y Escena</h4>
-        <div class="control-group">
-            <div class="label-row"><span>Exposición</span> <span id="v-exp">1.0</span></div>
-            <input type="range" min="0" max="3" step="0.1" value="1" oninput="viewer.exposure = this.value; document.getElementById('v-exp').innerText=this.value">
-        </div>
-
-        <h4>Post-Process (Imagen)</h4>
-        <div class="control-group">
-            <div class="label-row"><span>Brillo</span></div>
-            <input type="range" id="p-bright" min="50" max="200" value="100" oninput="applyFilters()">
-        </div>
-        <div class="control-group">
-            <div class="label-row"><span>Contraste</span></div>
-            <input type="range" id="p-contrast" min="50" max="200" value="100" oninput="applyFilters()">
-        </div>
-        <div class="control-group">
-            <div class="label-row"><span>Saturación</span></div>
-            <input type="range" id="p-saturate" min="0" max="200" value="100" oninput="applyFilters()">
-        </div>
-    </div>
-
-    <div class="stats-chip" id="stats">POLYGONS: -- | VERTS: --</div>
-
-    <model-viewer id="main-visor" 
-        src="" 
-        camera-controls 
-        auto-rotate
-        shadow-intensity="1" 
-        environment-image="neutral"
-        exposure="1"
-        loading="eager"
-        interaction-prompt="none">
-    </model-viewer>
-
-    <script>
-        const viewer = document.querySelector("#main-visor");
-        let originalMaterials = new Map();
-
-        // 1. CARGA LOCAL SEGURA DESDE LA CARPETA 'MODELOS'
-        const params = new URLSearchParams(window.location.search);
-        const modelParam = params.get('model');
+        // Limpiamos el nombre si trae la ruta completa
+        let cleanName = fileName.replace('modelos/', '');
         
-        if(modelParam) {
-            // Decodificamos el nombre del archivo
-            const fileName = decodeURIComponent(modelParam);
-            
-            // Si el index.html envía solo 'sapo.glb', aquí le ponemos la ruta completa
-            // Si el index ya envía 'modelos/sapo.glb', esto lo detecta automáticamente
-            const finalPath = fileName.startsWith('modelos/') ? fileName : `modelos/${fileName}`;
-            
-            viewer.src = finalPath;
-            document.querySelector("#model-name").innerText = "LOADING: " + fileName.toUpperCase();
-        }
+        // CONSTRUIMOS LA URL DE MEDIA PARA LFS
+        // Esto obliga a GitHub a entregar el archivo real, no el puntero de texto
+        const lfsPath = `https://media.githubusercontent.com/media/${GITHUB_USER}/${GITHUB_REPO}/main/modelos/${cleanName}`;
+        
+        viewer.src = lfsPath;
+        document.querySelector("#model-name").innerText = "DESCARGANDO: " + cleanName.toUpperCase();
+    }
 
-        // 2. ANALISIS DE MALLA Y PREPARACIÓN DE MODOS
-        viewer.addEventListener('load', () => {
-            document.querySelector("#model-name").innerText = "INSPECTOR ACTIVE";
-            const scene = viewer.toObject3D();
-            let polys = 0;
-            let verts = 0;
+    // 2. BARRA DE CARGA REAL (Para archivos de 100MB)
+    viewer.addEventListener('progress', (event) => {
+        const percent = Math.round(event.detail.totalProgress * 100);
+        document.querySelector("#model-name").innerText = `CARGANDO: ${percent}%`;
+        if(percent === 100) document.querySelector("#model-name").innerText = "PROCESANDO GEOMETRÍA...";
+    });
 
-            scene.traverse(node => {
-                if (node.isMesh) {
-                    originalMaterials.set(node.uuid, node.material.clone());
-                    
-                    polys += node.geometry.index ? node.geometry.index.count / 3 : node.geometry.attributes.position.count / 3;
-                    verts += node.geometry.attributes.position.count;
+    // 3. ANALISIS DE MALLA Y PREPARACIÓN DE MODOS
+    viewer.addEventListener('load', () => {
+        document.querySelector("#model-name").innerText = "INSPECTOR ACTIVE";
+        const scene = viewer.toObject3D();
+        let polys = 0;
+        let verts = 0;
 
-                    const wireGeo = new THREE.WireframeGeometry(node.geometry);
-                    const wireMat = new THREE.LineBasicMaterial({ color: 0x00d4ff, transparent: true, opacity: 0.3 });
-                    const wireframe = new THREE.LineSegments(wireGeo, wireMat);
-                    wireframe.name = "wireframe_layer";
-                    wireframe.visible = false;
-                    node.add(wireframe);
-                }
-            });
+        scene.traverse(node => {
+            if (node.isMesh) {
+                originalMaterials.set(node.uuid, node.material.clone());
+                
+                polys += node.geometry.index ? node.geometry.index.count / 3 : node.geometry.attributes.position.count / 3;
+                verts += node.geometry.attributes.position.count;
 
-            document.getElementById('stats').innerText = `POLYS: ${Math.round(polys).toLocaleString()} | VERTS: ${Math.round(verts).toLocaleString()}`;
+                const wireGeo = new THREE.WireframeGeometry(node.geometry);
+                const wireMat = new THREE.LineBasicMaterial({ color: 0x00d4ff, transparent: true, opacity: 0.3 });
+                const wireframe = new THREE.LineSegments(wireGeo, wireMat);
+                wireframe.name = "wireframe_layer";
+                wireframe.visible = false;
+                node.add(wireframe);
+            }
         });
 
-        // 3. SWITCH DE RENDERIZADO
-        function updateRender(mode) {
-            document.querySelectorAll('.btn-mode').forEach(b => b.classList.remove('active'));
-            document.getElementById(`m-${mode}`).classList.add('active');
+        document.getElementById('stats').innerText = `POLYS: ${Math.round(polys).toLocaleString()} | VERTS: ${Math.round(verts).toLocaleString()}`;
+    });
 
-            const scene = viewer.toObject3D();
-            scene.traverse(node => {
-                if (node.isMesh) {
-                    const wireLayer = node.children.find(c => c.name === "wireframe_layer");
-                    if (wireLayer) wireLayer.visible = (mode === 'wire');
-                    
-                    if (mode === 'clay') {
-                        node.material = new THREE.MeshStandardMaterial({ color: 0x666666, roughness: 0.8 });
-                    } else if (mode === 'uv') {
-                        node.material = new THREE.MeshStandardMaterial({ color: 0x00d4ff, transparent: true, opacity: 0.2 });
-                    } else {
-                        node.material = originalMaterials.get(node.uuid);
-                    }
+    // 4. SWITCH DE RENDERIZADO
+    function updateRender(mode) {
+        document.querySelectorAll('.btn-mode').forEach(b => b.classList.remove('active'));
+        document.getElementById(`m-${mode}`).classList.add('active');
+
+        const scene = viewer.toObject3D();
+        scene.traverse(node => {
+            if (node.isMesh) {
+                const wireLayer = node.children.find(c => c.name === "wireframe_layer");
+                if (wireLayer) wireLayer.visible = (mode === 'wire');
+                
+                if (mode === 'clay') {
+                    node.material = new THREE.MeshStandardMaterial({ color: 0x666666, roughness: 0.8 });
+                } else if (mode === 'uv') {
+                    node.material = new THREE.MeshStandardMaterial({ color: 0x00d4ff, transparent: true, opacity: 0.2 });
+                } else {
+                    node.material = originalMaterials.get(node.uuid);
                 }
-            });
-        }
+            }
+        });
+    }
 
-        // 4. FILTROS CSS
-        function applyFilters() {
-            const b = document.getElementById('p-bright').value;
-            const c = document.getElementById('p-contrast').value;
-            const s = document.getElementById('p-saturate').value;
-            viewer.style.filter = `brightness(${b}%) contrast(${c}%) saturate(${s}%)`;
-        }
-    </script>
-</body>
-</html>
+    // 5. FILTROS CSS
+    function applyFilters() {
+        const b = document.getElementById('p-bright').value;
+        const c = document.getElementById('p-contrast').value;
+        const s = document.getElementById('p-saturate').value;
+        viewer.style.filter = `brightness(${b}%) contrast(${c}%) saturate(${s}%)`;
+    }
+</script>
