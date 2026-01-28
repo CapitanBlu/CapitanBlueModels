@@ -3,204 +3,216 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CapitanBlue | 3D Portfolio</title>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;700;800&display=swap" rel="stylesheet">
+    <title>CapitanBlue | Hub</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     
     <style>
         :root {
-            --meta-blue: #00d4ff;
-            --meta-orange: #ff9800;
-            --bg: #08080a;
-            --card-bg: #121214;
-            --text-dim: #a1a1aa;
+            --x-blue: #1d9bf0;
+            --x-border: #2f3336;
+            --x-bg: #000000;
+            --x-card: #16181c;
+            --text-main: #e7e9ea;
+            --text-dim: #71767b;
         }
 
         body {
-            font-family: 'Plus Jakarta Sans', sans-serif;
-            background-color: var(--bg);
-            color: white;
+            font-family: 'Inter', sans-serif;
+            background-color: var(--x-bg);
+            color: var(--text-main);
             margin: 0;
-            padding: 0;
+            display: flex;
         }
 
-        /* Header Profesional */
-        header {
-            height: 80px;
-            padding: 0 5%;
+        /* Barra Lateral tipo X */
+        aside {
+            width: 260px;
+            height: 100vh;
+            border-right: 1px solid var(--x-border);
+            position: fixed;
+            padding: 20px;
             display: flex;
-            justify-content: space-between;
+            flex-direction: column;
+        }
+
+        .logo-box {
+            padding: 12px;
+            font-size: 1.5rem;
+            font-weight: 800;
+            margin-bottom: 30px;
+        }
+        .logo-box span { color: var(--x-blue); }
+
+        nav { display: flex; flex-direction: column; gap: 10px; }
+        nav a {
+            text-decoration: none;
+            color: var(--text-main);
+            padding: 12px 20px;
+            border-radius: 9999px;
+            font-size: 1.1rem;
+            font-weight: 500;
+            transition: 0.2s;
+            display: flex;
             align-items: center;
-            background: rgba(8, 8, 10, 0.9);
-            backdrop-filter: blur(10px);
+            gap: 15px;
+        }
+        nav a:hover { background: rgba(231, 233, 234, 0.1); }
+        nav a.active { font-weight: 800; }
+
+        /* Contenido Principal */
+        main {
+            margin-left: 260px;
+            width: 100%;
+            min-height: 100vh;
+        }
+
+        header {
+            padding: 15px 25px;
+            border-bottom: 1px solid var(--x-border);
+            backdrop-filter: blur(12px);
+            background: rgba(0,0,0,0.7);
             position: sticky;
             top: 0;
-            z-index: 1000;
-            border-bottom: 1px solid rgba(255,255,255,0.05);
+            z-index: 100;
         }
+        header h2 { margin: 0; font-size: 1.2rem; font-weight: 700; }
 
-        .logo { font-weight: 800; font-size: 1.4rem; letter-spacing: -1px; }
-        .logo span { color: var(--meta-blue); }
-
-        nav a {
-            text-decoration: none; color: white;
-            font-weight: 600; font-size: 0.9rem;
-            margin-left: 20px; transition: 0.3s;
-        }
-        nav a:hover { color: var(--meta-blue); }
-
-        /* Sección Hero */
-        .hero {
-            padding: 100px 10% 60px 10%;
-            text-align: center;
-            background: radial-gradient(circle at top, #1e293b 0%, #08080a 70%);
-        }
-
-        .hero h1 { font-size: 3.5rem; margin-bottom: 10px; font-weight: 800; }
-        .hero p { color: var(--text-dim); font-size: 1.1rem; max-width: 600px; margin: 0 auto; }
-
-        /* Grid de Modelos */
-        .grid-container {
-            padding: 40px 10%;
+        /* Grid estilo Portfolio Moderno */
+        .feed {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-            gap: 30px;
+            grid-template-columns: repeat(auto-fill, minmax(450px, 1fr));
+            gap: 20px;
         }
 
-        .model-card {
-            background: var(--card-bg);
+        .post-card {
+            background: var(--x-bg);
+            border: 1px solid var(--x-border);
             border-radius: 16px;
             overflow: hidden;
-            border: 1px solid rgba(255,255,255,0.05);
-            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            transition: 0.3s;
             cursor: pointer;
+        }
+
+        .post-card:hover {
+            background: rgba(255,255,255,0.03);
+        }
+
+        .img-container {
+            width: 100%;
+            aspect-ratio: 16/9;
+            background: #111;
+            overflow: hidden;
             position: relative;
         }
 
-        .model-card:hover {
-            transform: translateY(-10px);
-            border-color: var(--meta-blue);
-            box-shadow: 0 20px 40px rgba(0,0,0,0.4);
-        }
-
-        /* Imagen de Previa */
-        .img-wrapper {
-            width: 100%;
-            aspect-ratio: 16/9;
-            overflow: hidden;
-            background: #1a1a1e;
-        }
-
-        .img-wrapper img {
+        .img-container img {
             width: 100%; height: 100%;
             object-fit: cover;
-            transition: 0.5s;
+            transition: 0.5s ease;
         }
 
-        .model-card:hover .img-wrapper img { transform: scale(1.1); }
+        .post-card:hover .img-container img { transform: scale(1.02); }
 
-        /* Información de la Card */
-        .card-body { padding: 20px; }
-        .card-body h3 { margin: 0 0 5px 0; font-size: 1.1rem; }
-        .card-body p { margin: 0; color: var(--text-dim); font-size: 0.8rem; font-weight: 500; }
+        .post-content { padding: 15px; }
+        .post-header { display: flex; justify-content: space-between; align-items: flex-start; }
+        .post-title { font-weight: 700; font-size: 1.1rem; margin-bottom: 4px; }
+        .post-desc { color: var(--text-dim); font-size: 0.9rem; line-height: 1.4; }
 
-        .btn-explore {
-            margin-top: 15px;
-            width: 100%;
-            padding: 12px;
-            border-radius: 8px;
-            background: rgba(255,255,255,0.05);
+        .badge-pro {
+            background: var(--x-blue);
             color: white;
-            border: 1px solid rgba(255,255,255,0.1);
-            font-weight: 700;
-            cursor: pointer;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.7rem;
+            font-weight: 800;
+        }
+
+        /* Footer de la card (Interacción) */
+        .post-footer {
             display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
-            transition: 0.3s;
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid var(--x-border);
+            color: var(--text-dim);
+            gap: 40px;
         }
+        .stat { display: flex; align-items: center; gap: 8px; font-size: 0.85rem; }
+        .stat i { font-size: 1rem; }
+        .stat:hover { color: var(--x-blue); }
 
-        .model-card:hover .btn-explore {
-            background: var(--meta-blue);
-            color: black;
-            border-color: var(--meta-blue);
-        }
-
-        /* Badge de calidad */
-        .badge {
-            position: absolute; top: 15px; left: 15px;
-            background: rgba(0,0,0,0.6); backdrop-filter: blur(5px);
-            padding: 5px 10px; border-radius: 6px; font-size: 10px;
-            font-weight: 800; color: var(--meta-blue); z-index: 10;
-        }
     </style>
 </head>
 <body>
 
-    <header>
-        <div class="logo">CAPITAN<span>BLUE</span></div>
+    <aside>
+        <div class="logo-box"><i class="fa-solid fa-cube"></i> CAPITAN<span>BLUE</span></div>
         <nav>
-            <a href="#models">MODELOS</a>
-            <a href="lab.html" style="color: var(--meta-orange)">LAB</a>
-            <a href="admin.html">ADMIN</a>
+            <a href="#" class="active"><i class="fa-solid fa-house"></i> Galería</a>
+            <a href="lab.html"><i class="fa-solid fa-flask"></i> LAB 3D</a>
+            <a href="admin.html"><i class="fa-solid fa-gear"></i> Ajustes</a>
         </nav>
-    </header>
+    </aside>
 
-    <section class="hero">
-        <h1>Digital Art <span>Gallery</span></h1>
-        <p>Explora mis modelos 3D y animaciones directamente desde el navegador con tecnología de inspección en tiempo real.</p>
-    </section>
+    <main>
+        <header>
+            <h2>Inicio</h2>
+        </header>
 
-    <section class="grid-container" id="models">
-        
-        <div class="model-card" onclick="launchVisor('alfredd.glb')">
-            <div class="badge">4K TEXTURES</div>
-            <div class="img-wrapper">
-                <img src="img/previa_twisted.jpg" alt="Toy">
+        <section class="feed">
+            
+            <div class="post-card" onclick="launchVisor('alfredd.glb')">
+                <div class="img-container">
+                    <img src="img/previa_twisted.jpg" alt="Toy">
+                </div>
+                <div class="post-content">
+                    <div class="post-header">
+                        <div>
+                            <div class="post-title">Toy Asset - Version 2.0</div>
+                            <div class="post-desc">Modelado de alta fidelidad con texturas PBR y rigging avanzado.</div>
+                        </div>
+                        <span class="badge-pro">4K</span>
+                    </div>
+                    <div class="post-footer">
+                        <div class="stat"><i class="fa-regular fa-eye"></i> Inspeccionar</div>
+                        <div class="stat"><i class="fa-regular fa-comment"></i> Detalles</div>
+                        <div class="stat"><i class="fa-solid fa-share-nodes"></i> Compartir</div>
+                    </div>
+                </div>
             </div>
-            <div class="card-body">
-                <h3>toy Asset</h3>
-                <p>High Fidelity Character Model</p>
-                <button class="btn-explore"><i class="fas fa-eye"></i> VER EN 3D</button>
-            </div>
-        </div>
 
-        <div class="model-card" onclick="launchVisor('sapo.glb')">
-            <div class="badge">PBR MATERIAL</div>
-            <div class="img-wrapper">
-                <img src="img/previa_sapo.jpg" alt="Sapo">
+            <div class="post-card" onclick="launchVisor('sapo.glb')">
+                <div class="img-container">
+                    <img src="img/previa_sapo.jpg" alt="Sapo">
+                </div>
+                <div class="post-content">
+                    <div class="post-header">
+                        <div>
+                            <div class="post-title">Rana Tropical</div>
+                            <div class="post-desc">Estudio de esculpido orgánico y materiales realistas.</div>
+                        </div>
+                        <span class="badge-pro">ORGANIC</span>
+                    </div>
+                    <div class="post-footer">
+                        <div class="stat"><i class="fa-regular fa-eye"></i> Inspeccionar</div>
+                        <div class="stat"><i class="fa-regular fa-comment"></i> Detalles</div>
+                        <div class="stat"><i class="fa-solid fa-share-nodes"></i> Compartir</div>
+                    </div>
+                </div>
             </div>
-            <div class="card-body">
-                <h3>Rana Tropical</h3>
-                <p>Nature Study - Sculpting</p>
-                <button class="btn-explore"><i class="fas fa-eye"></i> VER EN 3D</button>
-            </div>
-        </div>
 
-        <div class="model-card" onclick="launchVisor('suitPia.glb')">
-            <div class="badge">ANIMATED</div>
-            <div class="img-wrapper">
-                <img src="img/previa_suit.jpg" alt="Suit">
-            </div>
-            <div class="card-body">
-                <h3>Suit Pia</h3>
-                <p>Mechanical Design</p>
-                <button class="btn-explore"><i class="fas fa-eye"></i> VER EN 3D</button>
-            </div>
-        </div>
-
-    </section>
+        </section>
+    </main>
 
     <script>
-        // CONFIGURACIÓN DE TU REPOSITORIO
         const USER = "CapitanBlu"; 
         const REPO = "CapitanBlueModels";
 
         function launchVisor(fileName) {
-            // Generar URL para archivos pesados (Git LFS)
             const lfsUrl = `https://media.githubusercontent.com/media/${USER}/${REPO}/main/modelos/${fileName}`;
-            // Enviar al visor con la URL codificada
             window.location.href = `visor.html?model=${encodeURIComponent(lfsUrl)}`;
         }
     </script>
