@@ -90,7 +90,7 @@
 
     <section class="hero">
         <h1>CapitanBlue <span style="color:var(--meta-blue)">Models</span></h1>
-        <p style="color: #b0b3b8; font-size: 1.1rem; max-width: 600px;">Visualización 3D local optimizada para archivos de gran escala.</p>
+        <p style="color: #b0b3b8; font-size: 1.1rem; max-width: 600px;">Visualización 3D remota optimizada para assets de alta fidelidad (Git LFS).</p>
     </section>
 
     <section id="mis-modelos">
@@ -103,47 +103,50 @@
                     <img src="img/previa_sapo.jpg" alt="Rana">
                 </div>
                 <div class="card-info">
-                    <h3>Rana Tropical (Local)</h3>
-                    <p>Asset optimizado cargado desde la carpeta de modelos interna.</p>
+                    <h3>Rana Tropical</h3>
+                    <p>Asset optimizado con texturas 2K.</p>
                     <a onclick="launchVisor('sapo.glb')" class="btn-view">
                         <i class="fas fa-cube"></i> EXPLORAR ASSET
                     </a>
                 </div>
             </div>
+
             <div class="card">
                 <div class="thumb-container">
                     <span class="badge">HQ ASSET</span>
-                    <img src="img/previa_sapo.jpg" alt="suit">
+                    <img src="img/previa_suit.jpg" alt="suit">
                 </div>
                 <div class="card-info">
-                    <h3>Rana Tropical (Local)</h3>
-                    <p>Asset optimizado cargado desde la carpeta de modelos interna.</p>
+                    <h3>Suit Pia</h3>
+                    <p>Modelo detallado cargado vía LFS.</p>
                     <a onclick="launchVisor('suitPia.glb')" class="btn-view">
                         <i class="fas fa-cube"></i> EXPLORAR ASSET
                     </a>
                 </div>
             </div>
+
              <div class="card">
                 <div class="thumb-container">
                     <span class="badge">HQ ASSET</span>
-                    <img src="img/previa_sapo.jpg" alt="pia_Nightmare">
+                    <img src="img/previa_night.jpg" alt="pia_Nightmare">
                 </div>
                 <div class="card-info">
-                    <h3>Rana Tropical (Local)</h3>
-                    <p>Asset optimizado cargado desde la carpeta de modelos interna.</p>
+                    <h3>Pia Nightmare</h3>
+                    <p>Asset de gran escala para inspección.</p>
                     <a onclick="launchVisor('piaNight.glb')" class="btn-view">
                         <i class="fas fa-cube"></i> EXPLORAR ASSET
                     </a>
                 </div>
             </div>
+
             <div class="card">
                 <div class="thumb-container">
                     <span class="badge">HQ ASSET</span>
-                    <img src="img/previa_sapo.jpg" alt="toy freddy">
+                    <img src="img/previa_freddy.jpg" alt="toy freddy">
                 </div>
                 <div class="card-info">
-                    <h3>Rana Tropical (Local)</h3>
-                    <p>Asset optimizado cargado desde la carpeta de modelos interna.</p>
+                    <h3>Toy Freddy V8</h3>
+                    <p>Versión final con materiales avanzados.</p>
                     <a onclick="launchVisor('toyfreddy_v8.glb')" class="btn-view">
                         <i class="fas fa-cube"></i> EXPLORAR ASSET
                     </a>
@@ -154,18 +157,21 @@
     </section>
 
     <script>
+        // CONFIGURA TUS DATOS DE GITHUB AQUÍ:
+        const USER = "TU_USUARIO"; // Tu usuario de GitHub
+        const REPO = "TU_REPO";    // El nombre de tu repositorio
+
         /**
-         * Función para lanzar el visor
-         * @param {string} fileName - Nombre del archivo (ej. 'sapo.glb')
+         * Lanza el visor apuntando a la dirección de descarga real de LFS
          */
         function launchVisor(fileName) {
             if(!fileName) return;
             
-            // Ruta corregida a la carpeta 'modelos'
-            const filePath = 'modelos/' + fileName;
+            // Construimos la URL que GitHub utiliza para archivos pesados (media.githubusercontent)
+            // Esto garantiza que el visor lea el archivo real y no el puntero de Git LFS
+            const lfsUrl = `https://media.githubusercontent.com/media/${USER}/${REPO}/main/modelos/${fileName}`;
             
-            // Redirigimos al visor pasando la ruta completa codificada
-            window.location.href = `visor.html?model=${encodeURIComponent(filePath)}`;
+            window.location.href = `visor.html?model=${encodeURIComponent(lfsUrl)}`;
         }
     </script>
 
